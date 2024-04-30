@@ -1,11 +1,16 @@
+altgraph==0.17.4
 bcrypt==4.1.2
 certifi==2024.2.2
 cffi==1.16.0
 charset-normalizer==3.3.2
 Cython==3.0.10
 idna==3.7
+macholib==1.16.3
 numpy==1.26.4
+packaging==24.0
 pycparser==2.22
+pyinstaller==6.6.0
+pyinstaller-hooks-contrib==2024.5
 PyQt6==6.7.0
 PyQt6-Qt6==6.7.0
 PyQt6-sip==13.6.0
