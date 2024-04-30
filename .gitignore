@@ -1,3 +1,10 @@
 *.py[cod]
 *__pycache__/
-cython/telem.py
+cython/
+
+*.c
+build/
+
+telem.py
+
+SausageV2/
