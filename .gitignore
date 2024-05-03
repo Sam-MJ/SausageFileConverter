@@ -2,3 +2,4 @@
 *__pycache__/
 cython/telem.py
 cython/build
+cython/
