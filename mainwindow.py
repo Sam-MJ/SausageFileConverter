@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 from pathlib import Path
 from worker import Worker
+from telem import Telem
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -103,14 +104,22 @@ class MainWindow(QtWidgets.QWidget):
         self.worker = Worker(self.ctrl)
         self.worker_thread = QtCore.QThread()
 
+        self.telem = Telem(self.ctrl)
+        self.telem_thread = QtCore.QThread()
+
         # move to thread and start
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
 
+        self.telem.moveToThread(self.telem_thread)
+        self.telem_thread.start()
+
         # setup signal and slot
         self.submit_signal.connect(self.worker.all_inputs)
+        self.submit_signal.connect(self.telem.fetch)
         self.worker.number_of_files.connect(self.number_of_files)
         self.worker.progress.connect(self.progress_int)
+        self.worker.processed.connect(self.telem.update_or_create)
         # self.worker.processed.connect() #return futures
 
         # add Signals to Buttons

@@ -19,7 +19,7 @@ class Worker(QtCore.QObject):
 
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
-    processed = QtCore.Signal(str)
+    processed = QtCore.Signal(bool)
 
     @QtCore.Slot(str)
     def all_inputs(
@@ -179,6 +179,7 @@ class Worker(QtCore.QObject):
 
             # When all are done, send the last percent to the update bar
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
+            self.processed.emit(True)
             self.progress.emit(len(files_with_correct_size_variations))
 
     def file_copy_pool(self, files_without_variations):
