@@ -9,7 +9,8 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
 
-    w = MainWindow(windowTitle="Sausage File Converter")
+    w = MainWindow()
+    w.show()
 
     app.exec()
     print("Closing...")

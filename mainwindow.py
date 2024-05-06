@@ -4,7 +4,39 @@ from worker import Worker
 from telem import Telem
 
 
-class MainWindow(QtWidgets.QWidget):
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+        self.setWindowTitle("SausageFileConverter")
+        self.create_menus()
+        self.create_main_frame()
+
+    def create_menus(self):
+        self.aboutAction = QtGui.QAction("About", self, triggered=self.on_about)
+        # self.websiteAction = QtGui.QAction("Website", self, triggered=self.on_website)
+        self.help_menu = self.menuBar().addMenu("Help")
+        self.help_menu.addAction(self.aboutAction)
+        # self.help_menu.addAction(self.websiteAction)
+
+    def create_main_frame(self):
+        self.mainWidget = MainWidget(self)
+        self.setCentralWidget(self.mainWidget)
+
+    def on_website(self):
+        pass
+
+    def on_about(self):
+        def openUrl(self):
+            url = QtCore.QUrl(
+                "https://drive.google.com/drive/folders/1xd2OL913scQhadmyo6mU79cbZ2ikDN5x?usp=sharing"
+            )
+            if not QtGui.QDesktopServices.openUrl(url):
+                QtWidgets.QMessageBox.warning(self, "Open Url", "Could not open url")
+
+        openUrl(self)
+
+
+class MainWidget(QtWidgets.QWidget):
 
     submit_signal = QtCore.Signal(str, str, float, float, bool, bool)
 
@@ -129,7 +161,7 @@ class MainWindow(QtWidgets.QWidget):
         self.convert_button.clicked.connect(self.process)
 
         # Start eventloop... I think
-        self.show()
+        # self.show()
 
     def cancel(self):
         self.ctrl["break"] = True
