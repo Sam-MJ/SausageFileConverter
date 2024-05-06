@@ -85,9 +85,6 @@ class MainWidget(QtWidgets.QWidget):
         self.foldersinfolders_checkbox = QtWidgets.QCheckBox(
             "Process folders in folders", self
         )
-        # toolbar
-        """ self.toolbar = QtWidgets.QToolBar()
-        self.toolbar.add """
 
         # add widgets to layouts
         layout = QtWidgets.QVBoxLayout()  # vertical layout
@@ -148,11 +145,9 @@ class MainWidget(QtWidgets.QWidget):
 
         # setup signal and slot
         self.submit_signal.connect(self.worker.all_inputs)
-        self.submit_signal.connect(self.telem.fetch)
         self.worker.number_of_files.connect(self.number_of_files)
         self.worker.progress.connect(self.progress_int)
         self.worker.processed.connect(self.telem.update_or_create)
-        # self.worker.processed.connect() #return futures
 
         # add Signals to Buttons
         self.inputfolder_button.clicked.connect(self.select_in_folder)
