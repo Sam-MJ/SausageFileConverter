@@ -22,7 +22,6 @@ class SendThread(QtCore.QThread):
         try:
             requests.post(database_url, json=self.payload, timeout=15)
         except Exception as e:
-            print(e)
             self.has_internet.emit(False)
 
 
