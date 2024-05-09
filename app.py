@@ -16,8 +16,6 @@ if __name__ == "__main__":
     print("Closing...")
     # when app closes, send updates to server before closing properly
 
-# TODO about window! / Licence
-
 # Extra features
 # TODO Add markers at the start of each file
 # TODO Auto create output folder

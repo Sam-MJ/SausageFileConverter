@@ -3,3 +3,4 @@
 cython/telem.py
 cython/build
 cython/
+*.env

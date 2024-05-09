@@ -147,7 +147,8 @@ class MainWidget(QtWidgets.QWidget):
         self.submit_signal.connect(self.worker.all_inputs)
         self.worker.number_of_files.connect(self.number_of_files)
         self.worker.progress.connect(self.progress_int)
-        self.worker.processed.connect(self.telem.update_or_create)
+        # self.worker.processed.connect(self.telem.on_process)
+        self.worker.progress.connect(self.telem.on_progress)
 
         # add Signals to Buttons
         self.inputfolder_button.clicked.connect(self.select_in_folder)
