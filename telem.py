@@ -33,6 +33,8 @@ class Telem(QtCore.QObject):
         super().__init__(parent=None)
         self.ctrl = ctrl
         # data
+        self.telem_version = 1
+        self.product_id = 1
         self.session_uuid = uuid.uuid4().hex
         self.files_created = 0
         self.files_scanned = 0
@@ -63,6 +65,8 @@ class Telem(QtCore.QObject):
         self.session_end = datetime.datetime.now().isoformat()
 
         payload = {
+            "telem_version": self.telem_version,
+            "product_id": self.product_id,
             "session_id": self.session_uuid,
             "files_created": self.files_created,
             "files_scanned": self.files_scanned,
