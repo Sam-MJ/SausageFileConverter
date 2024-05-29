@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import datetime
 import json
+import time
 
 
 class SendThread(QtCore.QThread):
@@ -15,18 +16,27 @@ class SendThread(QtCore.QThread):
     @QtCore.Slot(str)
     def send_payload(self, payload):
         self.payload = payload
-        # database_url = os.getenv("DATABASE_URL") # this blocks the GUI thread for some reason
-        database_url = "http://www.soundspruce.com//sausagefileconverter-transactions"
+
+        self.database_url = os.getenv("DATABASE_URL")
 
         try:
-            requests.post(database_url, json=self.payload, timeout=15)
+            requests.post(self.database_url, json=self.payload, timeout=15)
         except Exception as e:
             self.has_internet.emit(False)
-
         print(f"send first payload {self.payload}")
 
+        time.sleep(
+            3
+        )  # this thread blocks GUI! :( run method, runs on thread creation. others have to be started first.
+        # because telem thread isn't started on main thread and this thread isn't started by telem, this is still owned by the main thread.  AAAHHH!
+        print("bbbb")
+
     def run(self):
+
         ip_address = requests.get("https://api.ipify.org", timeout=15).text
+
+        time.sleep(3)
+        print("aaaa")
         self.ip.emit(ip_address)
 
 
@@ -37,7 +47,7 @@ class Telem(QtCore.QObject):
     def __init__(self, ctrl) -> None:
         super().__init__(parent=None)
         self.ctrl = ctrl
-        # data
+        # data and defaults
         self.telem_version = 1
         self.session_uuid = uuid.uuid4().hex
         self.my_mac = hex(uuid.getnode())
@@ -48,15 +58,19 @@ class Telem(QtCore.QObject):
         self.session_end = datetime.datetime.now().isoformat()
 
         self.internet_status = True
-        # api calls
+        # method calls
         load_dotenv(override=True)
         self._send_first_request()
 
     def _send_first_request(self):
-
+        """create a thread that can use the run method to fetch ip on creation, the ip is then added to the request payload."""
         self.first_send_thread = SendThread()
+
+        # first send gets IP and checks if there is a successful internet connection
         self.first_send_thread.has_internet.connect(self._assign_internet)
         self.first_send_thread.ip.connect(self._assign_ip_to_payload)
+
+        # once the IP has been set it is added to the payload and sent back to the first send thread.
         self.payload.connect(self.first_send_thread.send_payload)
         self.first_send_thread.start()
 
@@ -69,6 +83,8 @@ class Telem(QtCore.QObject):
         self.payload.emit(pl)
 
     def _get_json_payload(self):
+        """populate dictionary with instance variables and then convert to json"""
+
         self.files_scanned = self.ctrl["files_scanned"]
         self.files_created = self.ctrl["files_created"]
 
@@ -100,7 +116,7 @@ class Telem(QtCore.QObject):
 
     @QtCore.Slot(int)
     def on_progress(self):
-        """send"""
+        """When a file has finished, the payload is sent again to update values."""
         self.send_payload()
 
 

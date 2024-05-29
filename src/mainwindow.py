@@ -3,6 +3,7 @@ from pathlib import Path
 from worker import Worker
 from telem import Telem
 import sys
+import os
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -10,6 +11,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle("SausageFileConverter")
 
+        # Menu bars are complicated on Mac, just don't use them for now
         if sys.platform != "darwin":
             self.create_menus()
 
@@ -33,10 +35,11 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def on_about(self):
+        """Link to docs hosted on google drive"""
+        docs_url = os.getenv("DOCS_URL")
+
         def openUrl(self):
-            url = QtCore.QUrl(
-                "https://drive.google.com/drive/folders/1xd2OL913scQhadmyo6mU79cbZ2ikDN5x?usp=sharing"
-            )
+            url = QtCore.QUrl(docs_url)
             if not QtGui.QDesktopServices.openUrl(url):
                 QtWidgets.QMessageBox.warning(self, "Open Url", "Could not open url")
 
