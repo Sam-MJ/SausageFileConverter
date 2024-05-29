@@ -224,6 +224,7 @@ class MainWidget(QtWidgets.QWidget):
             # pass to worker using Signal
             i = self.inputfolder_input.text()
             o = self.outputfolder_input.text()
+
             # convert inputs to floats to pass them over signal, if they don't exist, create default values.
             if self.silenceduration_input.text():
                 sd = float(self.silenceduration_input.text())

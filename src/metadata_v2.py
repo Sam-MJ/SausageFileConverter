@@ -9,8 +9,15 @@ class Metadata_Parser:
     def __init__(self, from_file) -> None:
         """from file is a buffered file read with bytes"""
         self.file_bytes = BytesIO(from_file.read())
+        # defaults
         self.generic_metadata = b""
         self.generic_metadata_info = {}
+        self.header = None
+        self.header_info = None
+        self.fmt = None
+        self.fmt_info = None
+        self.data = None
+        self.data_info = None
         self.read()
 
     def _read_header(self):
@@ -121,7 +128,7 @@ class Metadata_Parser:
         # read all content of sub chunk
         content = self.file_bytes.read(sub_chunk_size)
 
-        # word align by adding a byte if chunk size isn't an even number. - chunks MUST be an even size (this may only be data chunk?)
+        # word align by adding a byte if chunk size isn't an even number. - chunks MUST be an even size
         if sub_chunk_size % 2 != 0:
             self.file_bytes.read(1)
             content += b"\x00"

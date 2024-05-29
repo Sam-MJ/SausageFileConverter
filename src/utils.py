@@ -10,6 +10,7 @@ def get_files(in_folder_path: Path, foldersinfolders: bool) -> list:
     """Get files with audio file suffixes from folder directory"""
     audio_file_names = []
     non_audio_file_names = []
+
     if foldersinfolders:
         file_paths = in_folder_path.rglob("*")  # .iterdir() - only one folder
     else:
@@ -27,24 +28,25 @@ def get_files(in_folder_path: Path, foldersinfolders: bool) -> list:
     types = ".wav"
 
     for file in file_paths:
-        if (
-            foldersinfolders
-        ):  # if True, you cannot have a folder in non_audio_file_names
+        if foldersinfolders:
+            # if True, you cannot have a folder in non_audio_file_names
             if file.is_file():
                 if file.suffix.lower() == types and file.name[0:2] != "._":
-                    # On windows, MAC OSX Wav files start with ._ They don't have any useable content.
+                    # On windows, MAC OSX has hidden temp Wav files that start with ._ They don't have any useable content.
                     audio_file_names.append(file)
                 else:
                     non_audio_file_names.append(file)
         else:
             if (
-                file.suffix.lower() == types
-                and file.is_file()
+                file.is_file()
+                and file.suffix.lower() == types
                 and file.name[0:2] != "._"
             ):
-                # On windows, MAC OSX Wav files start with ._ They don't have any useable content.
+                # On windows, MAC OSX has hidden temp Wav files that start with ._ They don't have any useable content.
                 audio_file_names.append(file)
             else:
+                # if foldersinfolders is false you want folder paths to be put here so they can be copied over.
+                # that's why is_file is inline in this branch and not in the top one.
                 non_audio_file_names.append(file)
 
     return (audio_file_names, non_audio_file_names)
@@ -76,6 +78,7 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
         """File path and tokens pair.  See if word tokens in file 1 match those in file 2"""
 
         # if files aren't in the same folder
+        # this stops a bug where you have variations from multiple folder levels being appended together
         if file_pair1[0].parent != file_pair2[0].parent:
             return False
 
@@ -182,8 +185,8 @@ def file_append(
     subtypes = []
     for file in single_variation_list:
         s = soundfile.SoundFile(file, "r")
-        samplerates.append(s.samplerate)  # this technically shouldn't be in the loop
-        subtypes.append(s.subtype)  # it's just convenient to leave it here
+        samplerates.append(s.samplerate)
+        subtypes.append(s.subtype)
 
         sound_data = s.read()
         s.close()
