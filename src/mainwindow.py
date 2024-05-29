@@ -2,20 +2,27 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from pathlib import Path
 from worker import Worker
 from telem import Telem
+import sys
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle("SausageFileConverter")
-        self.create_menus()
+
+        if sys.platform != "darwin":
+            self.create_menus()
+
         self.create_main_frame()
 
     def create_menus(self):
         self.aboutAction = QtGui.QAction("About", self, triggered=self.on_about)
         # self.websiteAction = QtGui.QAction("Website", self, triggered=self.on_website)
-        self.help_menu = self.menuBar().addMenu("Help")
-        self.help_menu.addAction(self.aboutAction)
+
+        self.help_menu = self.menuBar()
+        self.help_menu.setNativeMenuBar(True)
+        self.help_menu.addMenu("Help").addAction(self.aboutAction)
+
         # self.help_menu.addAction(self.websiteAction)
 
     def create_main_frame(self):
@@ -155,9 +162,6 @@ class MainWidget(QtWidgets.QWidget):
         self.outputfolder_button.clicked.connect(self.select_out_folder)
 
         self.convert_button.clicked.connect(self.process)
-
-        # Start eventloop... I think
-        # self.show()
 
     def cancel(self):
         self.ctrl["break"] = True

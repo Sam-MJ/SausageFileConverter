@@ -1,6 +1,4 @@
 *.py[cod]
 *__pycache__/
-cython/telem.py
-cython/build
-cython/
 *.env
+build

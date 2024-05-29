@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import os
 import datetime
 import json
-import time
 
 
 class SendThread(QtCore.QThread):
@@ -16,8 +15,8 @@ class SendThread(QtCore.QThread):
     @QtCore.Slot(str)
     def send_payload(self, payload):
         self.payload = payload
-        database_url = os.getenv("DATABASE_URL")
-        # database_url = "http://www.soundspruce.com//sausagefileconverter-transactions"
+        # database_url = os.getenv("DATABASE_URL") # this blocks the GUI thread for some reason
+        database_url = "http://www.soundspruce.com//sausagefileconverter-transactions"
 
         try:
             requests.post(database_url, json=self.payload, timeout=15)
@@ -27,7 +26,6 @@ class SendThread(QtCore.QThread):
         print(f"send first payload {self.payload}")
 
     def run(self):
-        time.sleep(3)
         ip_address = requests.get("https://api.ipify.org", timeout=15).text
         self.ip.emit(ip_address)
 
@@ -93,6 +91,7 @@ class Telem(QtCore.QObject):
 
         if self.internet_status is False:
             return None
+            # this also returns None if the server isn't running.
 
         pl = self._get_json_payload()
         database_url = os.getenv("DATABASE_URL")
