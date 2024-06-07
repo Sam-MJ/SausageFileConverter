@@ -6,7 +6,7 @@ import numpy
 import exceptions
 
 
-def get_files(in_folder_path: Path, foldersinfolders: bool) -> list:
+def get_files(in_folder_path: Path, foldersinfolders: bool) -> tuple[list, list]:
     """Get files with audio file suffixes from folder directory"""
     audio_file_names = []
     non_audio_file_names = []
