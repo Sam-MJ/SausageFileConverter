@@ -145,6 +145,27 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
     return files_with_variations
 
 
+def remove_files_with_exclude(files_with_variations: list, exclude_list: list):
+
+    files_with_variations_post_exclude = []
+
+    if len(exclude_list) == 0:
+        files_with_variations_post_exclude = files_with_variations
+        return files_with_variations_post_exclude
+
+    for variation in files_with_variations:
+        remove = False
+
+        for phrase in exclude_list:
+            if phrase in variation[0].stem:
+                remove = True
+
+        if remove == False:
+            files_with_variations_post_exclude.append(variation)
+
+    return files_with_variations_post_exclude
+
+
 # files to copy
 
 
