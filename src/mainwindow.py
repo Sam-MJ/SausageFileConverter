@@ -76,8 +76,8 @@ class MainWidget(QtWidgets.QWidget):
         # create widgets
         self.inputfolder_label = QtWidgets.QLabel("Input Folder")
         self.outputfolder_label = QtWidgets.QLabel("Output Folder")
-        self.appendtag_label = QtWidgets.QLabel("Append tag to end of file name")
-        self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing: ")
+        self.appendtag_label = QtWidgets.QLabel("Append tag")
+        self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing")
         self.silenceduration_label = QtWidgets.QLabel("Silence between clips (seconds)")
         self.maxduration_label = QtWidgets.QLabel(
             "Maximum file length to append (seconds)"
