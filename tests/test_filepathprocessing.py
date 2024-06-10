@@ -2,6 +2,8 @@ from pathlib import Path
 
 from src import utils
 
+from pprint import pprint
+
 
 def create_temp(tmp_path):
 
@@ -64,16 +66,14 @@ def test_file_tokenization(tmp_path):
     assert tokens == {
         Path(f"{tmp_path}/abc_01.wav"): [
             "abc",
+            "01",
         ],
         Path(f"{tmp_path}/abc_02.wav"): [
             "abc",
+            "02",
         ],
-        Path(f"{tmp_path}/mydir/01monty.wav"): [
-            "monty",
-        ],
-        Path(f"{tmp_path}/mydir/02monty.wav"): [
-            "monty",
-        ],
+        Path(f"{tmp_path}/mydir/01monty.wav"): ["01", "monty"],
+        Path(f"{tmp_path}/mydir/02monty.wav"): ["02", "monty"],
     }
 
 
@@ -84,34 +84,46 @@ def test_files_with_variations():
         ): ["abc", "Copy"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_01.wav"
-        ): ["abc"],
+        ): ["abc", "01"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_02.wav"
-        ): ["abc"],
+        ): ["abc", "02"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/abc - Copy.wav"
         ): ["abc", "Copy"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_01 - Copy.wav"
-        ): ["digital", "activation", "sequence", "beep", "Copy"],
+        ): ["digital", "activation", "sequence", "beep", "Copy", "01"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_01.wav"
-        ): ["digital", "activation", "sequence", "beep"],
+        ): ["digital", "activation", "sequence", "beep", "01"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
-        ): ["digital", "activation", "sequence", "beep"],
+        ): ["digital", "activation", "sequence", "beep", "02"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/01this_is a test.wav"
-        ): ["this", "is", "a", "test"],
+        ): ["01", "this", "is", "a", "test"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
-        ): ["this", "is", "a", "test"],
+        ): ["02", "this", "is", "a", "test"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/abc - Copy.wav"
         ): ["abc", "Copy"],
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/digital activation sequence beep_01.wav"
-        ): ["digital", "activation", "sequence", "beep"],
+        ): ["digital", "activation", "sequence", "beep", "01"],
+        Path(
+            "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_01.wav"
+        ): ["andrewscott", "01", "01"],
+        Path(
+            "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_02.wav"
+        ): ["andrewscott", "01", "02"],
+        Path(
+            "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
+        ): ["andrewscott", "02", "01"],
+        Path(
+            "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
+        ): ["andrewscott", "02", "02"],
     }
 
     expected_output = [
@@ -139,9 +151,26 @@ def test_files_with_variations():
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/01this_is a test.wav"
             ),
         ],
+        [
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_02.wav"
+            ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_01.wav"
+            ),
+        ],
+        [
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
+            ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
+            ),
+        ],
     ]
 
     output = utils.find_files_with_variations(data)
+    pprint(output)
 
     assert expected_output == output
 

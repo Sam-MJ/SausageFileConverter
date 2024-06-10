@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 import soundfile
 import numpy
+import math
 
 import exceptions
 
@@ -59,8 +60,8 @@ def file_tokenization(file_names: list) -> dict:
     for file_path in file_names:
         name = file_path.stem
 
-        # tokens = re.findall(r"[a-zA-Z]+|\d+", name) #words and digits
-        tokens = re.findall(r"[a-zA-Z]+", name)  # just words
+        tokens = re.findall(r"[a-zA-Z]+|\d+", name)  # words and digits
+        # tokens = re.findall(r"[a-zA-Z]+", name)  # just words
         path_and_tokens[file_path] = tokens
 
     return path_and_tokens
@@ -93,15 +94,28 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
         word2_token1,[word2_token2], word2_token3
         are tokens in [] the same?
         """
+        diff_index = 0
         for i in range(len(word1_tokens)):
-            if (
-                word1_tokens[i] == word2_tokens[i]
-                or word1_tokens[i].isdigit()
-                and word2_tokens[i].isdigit()
-            ):
-                continue
-            else:
-                return False
+            if word1_tokens[i] != word2_tokens[i]:
+                # if they aren't both digits, return False
+                if not (word1_tokens[i].isdigit() and word2_tokens[i].isdigit()):
+                    return False
+
+                # if both are the same or within 1 of eachother
+                if word1_tokens[i] == word2_tokens[i] or math.isclose(
+                    int(word1_tokens[i]), int(word2_tokens[i]), rel_tol=1
+                ):
+                    # if this is the first difference, set the index where differences are allowed.
+                    if diff_index == 0:
+                        diff_index = i
+
+                    # if the difference is in the allowed index, continue
+                    if diff_index == i:
+                        continue
+
+                    # if it's in a non-valid index, reset and return false
+                    diff_index = 0
+                    return False
         return True
 
     files_with_variations = []
