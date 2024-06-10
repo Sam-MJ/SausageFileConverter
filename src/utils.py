@@ -203,6 +203,17 @@ def create_parent_folders(file_path: Path):
     Path(parent_folders).mkdir(parents=True, exist_ok=True)
 
 
+def add_end_tag_to_filename(name_path: Path, tag: str):
+    """Add a given tag to the end of the file name"""
+    tag = "_" + tag
+    file_name = name_path.stem
+    extension = name_path.suffix
+    new_name = file_name + tag + extension
+    parts = name_path.parent
+
+    return parts.joinpath(new_name)
+
+
 def file_append(
     single_variation_list: list,
     silence_duration: int,

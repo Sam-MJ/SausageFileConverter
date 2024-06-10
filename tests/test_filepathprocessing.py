@@ -176,7 +176,6 @@ def test_files_with_variations():
     ]
 
     output = utils.find_files_with_variations(data)
-    pprint(output)
 
     assert expected_output == output
 
@@ -256,5 +255,18 @@ def test_exclude_function():
     assert output == expected
 
 
+def test_add_file_tag():
+    file = Path(
+        "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
+    )
+    tag = "sausage"
+
+    out = utils.add_end_tag_to_filename(file, tag=tag)
+
+    assert out == Path(
+        "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02_sausage.wav"
+    )
+
+
 if __name__ == "__main__":
-    test_files_with_variations()
+    test_add_file_tag()
