@@ -120,12 +120,12 @@ class Worker(QtCore.QObject):
 
         print(f"Copy: {file} to: {out_path}")
 
-    def concatination_handler(self, single_variation_list):
+    def concatination_handler(self, single_variation_list: list):
         """Take a list of files to be appended together, create a new file from it.
         Read metadata from the first of the old files and write to the new one."""
-        # Try to create new metadata object from first file in variation list, this might just be wave-chunk-parser being annoying.
-        sorted_names = sorted(single_variation_list)
-        original_file_name = sorted_names[0]
+        # sort variations
+        single_variation_list.sort(key=utils.num_sort)
+        original_file_name = single_variation_list[0]
 
         try:
             new_file_name = utils.file_append(

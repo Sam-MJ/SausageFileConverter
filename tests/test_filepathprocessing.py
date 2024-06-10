@@ -124,6 +124,9 @@ def test_files_with_variations():
         Path(
             "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
         ): ["andrewscott", "02", "02"],
+        Path(
+            "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_03.wav"
+        ): ["andrewscott", "02", "03"],
     }
 
     expected_output = [
@@ -165,6 +168,9 @@ def test_files_with_variations():
             ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
+            ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_03.wav"
             ),
         ],
     ]

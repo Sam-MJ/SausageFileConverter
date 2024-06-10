@@ -230,11 +230,8 @@ def file_append(
     for i in range(1, len(list_of_sound_objects) * 2 - 1, 2):
         list_of_sound_objects.insert(i, silence_block)
 
-    # take the filename of the first file
-    sorted_names = sorted(single_variation_list)
-    file_name = sorted_names[0]
-
     # create the output path
+    file_name = single_variation_list[0]
     new_filename = create_output_path(file_name, input_folder, output_folder)
 
     # check if it requires new parent folders
@@ -246,3 +243,8 @@ def file_append(
 
     print("Write: ", new_filename)
     return new_filename
+
+
+# helper function to perform sort
+def num_sort(test_string: Path):
+    return list(map(int, re.findall(r"\d+", test_string.name)))[0]
