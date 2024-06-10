@@ -219,6 +219,7 @@ def file_append(
     silence_duration: int,
     input_folder: Path,
     output_folder: Path,
+    append_tag: str,
 ) -> str:
     """
     Take a list of one set of files with variations i.e impact_01.wav, impact_02.wav, impact_03.wav and append them together.
@@ -265,6 +266,7 @@ def file_append(
     # create the output path
     file_name = single_variation_list[0]
     new_filename = create_output_path(file_name, input_folder, output_folder)
+    new_filename = add_end_tag_to_filename(new_filename, tag=append_tag)
 
     # check if it requires new parent folders
     create_parent_folders(new_filename)

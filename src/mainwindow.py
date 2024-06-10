@@ -48,7 +48,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 class MainWidget(QtWidgets.QWidget):
 
-    submit_signal = QtCore.Signal(str, str, float, float, bool, bool)
+    submit_signal = QtCore.Signal(str, str, float, float, bool, bool, list, str)
+    # input folder, output folder, silence duration, maximum duration, copy files, folders in folder, exclusion field, append tag.
 
     # progress bar input slots and settings.
     @QtCore.Slot(int, str)
@@ -75,6 +76,8 @@ class MainWidget(QtWidgets.QWidget):
         # create widgets
         self.inputfolder_label = QtWidgets.QLabel("Input Folder")
         self.outputfolder_label = QtWidgets.QLabel("Output Folder")
+        self.appendtag_label = QtWidgets.QLabel("Append tag to end of file name")
+        self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing: ")
         self.silenceduration_label = QtWidgets.QLabel("Silence between clips (seconds)")
         self.maxduration_label = QtWidgets.QLabel(
             "Maximum file length to append (seconds)"
@@ -82,6 +85,8 @@ class MainWidget(QtWidgets.QWidget):
 
         self.inputfolder_input = QtWidgets.QLineEdit()
         self.outputfolder_input = QtWidgets.QLineEdit()
+        self.appendtag_input = QtWidgets.QLineEdit()
+        self.exclusionfield_input = QtWidgets.QLineEdit()
         self.silenceduration_input = QtWidgets.QLineEdit()
         self.maxduration_input = QtWidgets.QLineEdit()
 
@@ -110,6 +115,14 @@ class MainWidget(QtWidgets.QWidget):
         output_layout.addWidget(self.outputfolder_input)
         output_layout.addWidget(self.outputfolder_button)
 
+        exclusionfield_layout = QtWidgets.QHBoxLayout()
+        exclusionfield_layout.addWidget(self.exclusionfield_label)
+        exclusionfield_layout.addWidget(self.exclusionfield_input)
+
+        appendtag_layout = QtWidgets.QHBoxLayout()
+        appendtag_layout.addWidget(self.appendtag_label)
+        appendtag_layout.addWidget(self.appendtag_input)
+
         silence_and_maxduration_layout = QtWidgets.QHBoxLayout()
         silence_and_maxduration_layout.addWidget(self.silenceduration_label)
         silence_and_maxduration_layout.addWidget(self.silenceduration_input)
@@ -122,6 +135,8 @@ class MainWidget(QtWidgets.QWidget):
 
         layout.addLayout(input_layout)
         layout.addLayout(output_layout)
+        layout.addLayout(exclusionfield_layout)
+        layout.addLayout(appendtag_layout)
         layout.addLayout(silence_and_maxduration_layout)
         layout.addLayout(checkbox_layout)
         layout.addWidget(self.convert_button)
@@ -201,6 +216,16 @@ class MainWidget(QtWidgets.QWidget):
 
         self.ctrl["break"] = False
 
+        def exclusion_str_to_list(self):
+            if self.exclusionfield_input.text():
+                exclusion_keyword_list = (
+                    self.exclusionfield_input.text().replace(" ", "").split(",")
+                )
+            else:
+                exclusion_keyword_list = []
+
+            return exclusion_keyword_list
+
         def validate(self) -> bool:
             """Validate that both folder paths exist"""
             if not self.inputfolder_input.text() or not self.outputfolder_input.text():
@@ -225,6 +250,8 @@ class MainWidget(QtWidgets.QWidget):
             i = self.inputfolder_input.text()
             o = self.outputfolder_input.text()
 
+            exclusion_list = exclusion_str_to_list(self)
+            append_tag = self.appendtag_input.text()
             # convert inputs to floats to pass them over signal, if they don't exist, create default values.
             if self.silenceduration_input.text():
                 sd = float(self.silenceduration_input.text())
@@ -239,4 +266,6 @@ class MainWidget(QtWidgets.QWidget):
             copybool = self.copyfiles_checkbox.isChecked()
             foldersinfolders = self.foldersinfolders_checkbox.isChecked()
             # send to Worker object
-            self.submit_signal.emit(i, o, sd, md, copybool, foldersinfolders)
+            self.submit_signal.emit(
+                i, o, sd, md, copybool, foldersinfolders, exclusion_list, append_tag
+            )

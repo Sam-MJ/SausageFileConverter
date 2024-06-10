@@ -32,6 +32,8 @@ class Worker(QtCore.QObject):
         maxduration_input,
         copybool,
         foldersinfolders,
+        exclusion_list,
+        append_tag,
     ):
         self.input_folder = Path(inputfolder_input)
         self.output_folder = Path(outputfolder_input)
@@ -39,6 +41,8 @@ class Worker(QtCore.QObject):
         self.max_duration = maxduration_input
         self.copybool = copybool
         self.foldersinfolders = foldersinfolders
+        self.exclusion_list = exclusion_list
+        self.append_tag = append_tag
 
         input_files = utils.get_files(self.input_folder, self.foldersinfolders)
         audio_files = input_files[0]
@@ -46,8 +50,15 @@ class Worker(QtCore.QObject):
         tokenized = utils.file_tokenization(audio_files)
         files_with_variations = utils.find_files_with_variations(tokenized)
 
+        # sort excluded files
+        files_with_variations_post_exclude = utils.remove_files_with_exclude(
+            files_with_variations=files_with_variations, exclude_list=exclusion_list
+        )
+
         # sort durations
-        correct_duration_list = self.remove_too_short_files(files_with_variations)
+        correct_duration_list = self.remove_too_short_files(
+            files_with_variations_post_exclude
+        )
 
         # append
         if len(correct_duration_list) > 0:
@@ -133,6 +144,7 @@ class Worker(QtCore.QObject):
                 self.silence_duration,
                 self.input_folder,
                 self.output_folder,
+                self.append_tag,
             )
 
             self.write_metadata(original_file_name, new_file_name)
