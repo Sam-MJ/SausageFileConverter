@@ -3,8 +3,13 @@ import re
 import soundfile
 import numpy
 import math
+import natsort
 
 import exceptions
+
+# from src import exceptions
+
+from pprint import pprint
 
 
 def get_files(in_folder_path: Path, foldersinfolders: bool) -> tuple[list, list]:
@@ -49,6 +54,8 @@ def get_files(in_folder_path: Path, foldersinfolders: bool) -> tuple[list, list]
                 # if foldersinfolders is false you want folder paths to be put here so they can be copied over.
                 # that's why is_file is inline in this branch and not in the top one.
                 non_audio_file_names.append(file)
+
+    audio_file_names = natsort.os_sorted(audio_file_names)
 
     return (audio_file_names, non_audio_file_names)
 
@@ -128,12 +135,12 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
         previous_file_path = previous_file[0]
 
         if word_match(current_file, previous_file):
+            if previous_file_path not in matched_files:
+                matched_files.append(previous_file_path)
 
             if current_file_path not in matched_files:
                 matched_files.append(current_file_path)
 
-            if previous_file_path not in matched_files:
-                matched_files.append(previous_file_path)
         else:
             if len(matched_files) > 0:
                 files_with_variations.append(matched_files)
@@ -142,6 +149,7 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
     if len(matched_files) > 0:
         files_with_variations.append(matched_files)
 
+    pprint(files_with_variations)
     return files_with_variations
 
 
@@ -279,6 +287,6 @@ def file_append(
     return new_filename
 
 
-# helper function to perform sort
 def num_sort(test_string: Path):
+    """Helper function to sort strings by the numbers in them"""
     return list(map(int, re.findall(r"\d+", test_string.name)))[0]

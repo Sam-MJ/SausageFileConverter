@@ -10,6 +10,9 @@ def create_temp(tmp_path):
     file_names = (
         "abc_01.wav",
         "abc_02.wav",
+        "abc_5.wav",
+        "abc_11.wav",
+        "abc_3.wav",
         "mydir/01monty.wav",
         "mydir/02monty.wav",
         "podcastwith10views.flac",
@@ -34,6 +37,9 @@ def test_get_files_folders_in_folders_true(tmp_path):
     assert audio_files == [
         Path(f"{tmp_path}/abc_01.wav"),
         Path(f"{tmp_path}/abc_02.wav"),
+        Path(f"{tmp_path}/abc_3.wav"),
+        Path(f"{tmp_path}/abc_5.wav"),
+        Path(f"{tmp_path}/abc_11.wav"),
         Path(f"{tmp_path}/mydir/01monty.wav"),
         Path(f"{tmp_path}/mydir/02monty.wav"),
     ]
@@ -48,6 +54,9 @@ def test_get_files_folders_in_folders_false(tmp_path):
     assert audio_files == [
         Path(f"{tmp_path}/abc_01.wav"),
         Path(f"{tmp_path}/abc_02.wav"),
+        Path(f"{tmp_path}/abc_3.wav"),
+        Path(f"{tmp_path}/abc_5.wav"),
+        Path(f"{tmp_path}/abc_11.wav"),
     ]
 
     assert [
@@ -72,6 +81,9 @@ def test_file_tokenization(tmp_path):
             "abc",
             "02",
         ],
+        Path(f"{tmp_path}/abc_3.wav"): ["abc", "3"],
+        Path(f"{tmp_path}/abc_5.wav"): ["abc", "5"],
+        Path(f"{tmp_path}/abc_11.wav"): ["abc", "11"],
         Path(f"{tmp_path}/mydir/01monty.wav"): ["01", "monty"],
         Path(f"{tmp_path}/mydir/02monty.wav"): ["02", "monty"],
     }
@@ -132,42 +144,42 @@ def test_files_with_variations():
     expected_output = [
         [
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_02.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_01.wav"
             ),
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_01.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_02.wav"
             ),
         ],
         [
-            Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
-            ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_01.wav"
             ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
+            ),
         ],
         [
-            Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
-            ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/01this_is a test.wav"
             ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
+            ),
         ],
         [
-            Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_02.wav"
-            ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_01.wav"
             ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_02.wav"
+            ),
         ],
         [
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
             ),
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
             ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_03.wav"
@@ -186,42 +198,42 @@ def test_exclude_function():
     input_list = [
         [
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_02.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_01.wav"
             ),
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_01.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/abc_02.wav"
             ),
         ],
         [
-            Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
-            ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_01.wav"
             ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
+            ),
         ],
         [
-            Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
-            ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/01this_is a test.wav"
             ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
+            ),
         ],
         [
-            Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_02.wav"
-            ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_01.wav"
             ),
+            Path(
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_01_02.wav"
+            ),
         ],
         [
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
             ),
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_01.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
             ),
             Path(
                 "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_03.wav"
@@ -232,18 +244,18 @@ def test_exclude_function():
     expected = [
         [
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_01.wav"
             ),
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_01.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/digital activation sequence beep_02.wav"
             ),
         ],
         [
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/01this_is a test.wav"
             ),
             Path(
-                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/01this_is a test.wav"
+                "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/anotherfolder/yet_another_folder/02this_is a test.wav"
             ),
         ],
     ]
@@ -269,4 +281,4 @@ def test_add_file_tag():
 
 
 if __name__ == "__main__":
-    test_add_file_tag()
+    pass
