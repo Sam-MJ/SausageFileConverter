@@ -55,7 +55,7 @@ def get_files(in_folder_path: Path, foldersinfolders: bool) -> tuple[list, list]
                 # that's why is_file is inline in this branch and not in the top one.
                 non_audio_file_names.append(file)
 
-    audio_file_names = natsort.os_sorted(audio_file_names)
+    audio_file_names = natsort.natsorted(audio_file_names)
 
     return (audio_file_names, non_audio_file_names)
 
