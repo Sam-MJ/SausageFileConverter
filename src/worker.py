@@ -135,7 +135,6 @@ class Worker(QtCore.QObject):
         """Take a list of files to be appended together, create a new file from it.
         Read metadata from the first of the old files and write to the new one."""
         # sort variations
-        single_variation_list.sort(key=utils.num_sort)
         original_file_name = single_variation_list[0]
 
         try:

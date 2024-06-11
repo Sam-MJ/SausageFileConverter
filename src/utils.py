@@ -285,8 +285,3 @@ def file_append(
 
     print("Write: ", new_filename)
     return new_filename
-
-
-def num_sort(test_string: Path):
-    """Helper function to sort strings by the numbers in them"""
-    return list(map(int, re.findall(r"\d+", test_string.name)))[0]
