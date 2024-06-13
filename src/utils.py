@@ -149,7 +149,6 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
     if len(matched_files) > 0:
         files_with_variations.append(matched_files)
 
-    pprint(files_with_variations)
     return files_with_variations
 
 

@@ -71,7 +71,7 @@ class Worker(QtCore.QObject):
             )
             non_audio_files = input_files[1]
             files_without_variations.extend(non_audio_files)
-            print(files_without_variations)
+            # print(files_without_variations)
 
             if len(files_without_variations) > 0:
                 self.file_copy_pool(files_without_variations)
