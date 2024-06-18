@@ -105,23 +105,20 @@ class MainWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()  # vertical layout
 
         # horizontal layout to place in vertical layout
-        input_layout = QtWidgets.QHBoxLayout()
-        input_layout.addWidget(self.inputfolder_label)
-        input_layout.addWidget(self.inputfolder_input)
-        input_layout.addWidget(self.inputfolder_button)
-
-        output_layout = QtWidgets.QHBoxLayout()
-        output_layout.addWidget(self.outputfolder_label)
-        output_layout.addWidget(self.outputfolder_input)
-        output_layout.addWidget(self.outputfolder_button)
-
-        exclusionfield_layout = QtWidgets.QHBoxLayout()
-        exclusionfield_layout.addWidget(self.exclusionfield_label)
-        exclusionfield_layout.addWidget(self.exclusionfield_input)
-
-        appendtag_layout = QtWidgets.QHBoxLayout()
-        appendtag_layout.addWidget(self.appendtag_label)
-        appendtag_layout.addWidget(self.appendtag_input)
+        textfield_layout = QtWidgets.QGridLayout()
+        textfield_layout.addWidget(self.inputfolder_label, 0, 0)
+        textfield_layout.addWidget(self.inputfolder_input, 0, 1)
+        textfield_layout.addWidget(self.inputfolder_button, 0, 2)
+        # output
+        textfield_layout.addWidget(self.outputfolder_label, 1, 0)
+        textfield_layout.addWidget(self.outputfolder_input, 1, 1)
+        textfield_layout.addWidget(self.outputfolder_button, 1, 2)
+        # exclusion field
+        textfield_layout.addWidget(self.exclusionfield_label, 2, 0)
+        textfield_layout.addWidget(self.exclusionfield_input, 2, 1)
+        # append field
+        textfield_layout.addWidget(self.appendtag_label, 3, 0)
+        textfield_layout.addWidget(self.appendtag_input, 3, 1)
 
         silence_and_maxduration_layout = QtWidgets.QHBoxLayout()
         silence_and_maxduration_layout.addWidget(self.silenceduration_label)
@@ -133,10 +130,7 @@ class MainWidget(QtWidgets.QWidget):
         checkbox_layout.addWidget(self.copyfiles_checkbox)
         checkbox_layout.addWidget(self.foldersinfolders_checkbox)
 
-        layout.addLayout(input_layout)
-        layout.addLayout(output_layout)
-        layout.addLayout(exclusionfield_layout)
-        layout.addLayout(appendtag_layout)
+        layout.addLayout(textfield_layout)
         layout.addLayout(silence_and_maxduration_layout)
         layout.addLayout(checkbox_layout)
         layout.addWidget(self.convert_button)
