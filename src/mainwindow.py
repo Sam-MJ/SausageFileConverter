@@ -221,13 +221,17 @@ class MainWidget(QtWidgets.QWidget):
             return exclusion_keyword_list
 
         def validate(self) -> bool:
-            """Validate that both folder paths exist"""
-            if not self.inputfolder_input.text() or not self.outputfolder_input.text():
+            """Validate that input folder paths exist and that the output folder either exists or is set to the same as the input folder."""
+            if not self.inputfolder_input.text():
                 QtWidgets.QMessageBox.information(
-                    self, "Error", "Set an Input and Output file path"
+                    self, "Error", "Set an Input file path"
                 )
                 return False
 
+            if not self.outputfolder_input.text():
+                self.outputfolder_input = self.inputfolder_input
+
+            # if there's an input or output path, check they exist. input path is already checked above.  output path is allowed to not exist!
             if (
                 not Path(self.inputfolder_input.text()).exists()
                 or not Path(self.outputfolder_input.text()).exists()

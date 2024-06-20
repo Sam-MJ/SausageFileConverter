@@ -280,5 +280,17 @@ def test_add_file_tag():
     )
 
 
+def test_create_default_path():
+    """append _sausage to the end of the input folder"""
+    path = Path(
+        r"D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN"
+    )
+    out = utils.create_default_file_path(path)
+
+    assert out == Path(
+        r"D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN_sausage"
+    )
+
+
 if __name__ == "__main__":
     pass

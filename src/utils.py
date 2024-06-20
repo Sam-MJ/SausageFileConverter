@@ -221,6 +221,15 @@ def add_end_tag_to_filename(name_path: Path, tag: str):
     return parts.joinpath(new_name)
 
 
+def create_default_file_path(input_path: Path):
+    input_path.name
+
+    suffix = "_sausage"
+    new_name = input_path.name + suffix
+
+    return input_path.parent.joinpath(new_name)
+
+
 def file_append(
     single_variation_list: list,
     silence_duration: int,

@@ -44,6 +44,10 @@ class Worker(QtCore.QObject):
         self.exclusion_list = exclusion_list
         self.append_tag = append_tag
 
+        # if there was no output folder given, it is set to the same as the input folder, this is then appended with _sausage
+        if self.input_folder == self.output_folder:
+            self.output_folder = utils.create_default_file_path(self.output_folder)
+
         input_files = utils.get_files(self.input_folder, self.foldersinfolders)
         audio_files = input_files[0]
         self.ctrl["files_scanned"] = len(audio_files)
@@ -71,7 +75,6 @@ class Worker(QtCore.QObject):
             )
             non_audio_files = input_files[1]
             files_without_variations.extend(non_audio_files)
-            # print(files_without_variations)
 
             if len(files_without_variations) > 0:
                 self.file_copy_pool(files_without_variations)
