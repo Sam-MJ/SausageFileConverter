@@ -212,7 +212,6 @@ def create_parent_folders(file_path: Path):
 
 def add_end_tag_to_filename(name_path: Path, tag: str):
     """Add a given tag to the end of the file name"""
-    tag = "_" + tag
     file_name = name_path.stem
     extension = name_path.suffix
     new_name = file_name + tag + extension

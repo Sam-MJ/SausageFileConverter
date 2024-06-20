@@ -74,10 +74,10 @@ class MainWidget(QtWidgets.QWidget):
         self.ctrl = {"break": False, "files_created": 0}
 
         # create widgets
-        self.inputfolder_label = QtWidgets.QLabel("Input Folder")
-        self.outputfolder_label = QtWidgets.QLabel("Output Folder")
-        self.appendtag_label = QtWidgets.QLabel("Append tag")
-        self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing")
+        self.inputfolder_label = QtWidgets.QLabel("Input Folder:")
+        self.outputfolder_label = QtWidgets.QLabel("Output Folder:")
+        self.appendtag_label = QtWidgets.QLabel("Append suffix to file name:")
+        self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing:")
         self.silenceduration_label = QtWidgets.QLabel("Silence between clips (seconds)")
         self.maxduration_label = QtWidgets.QLabel(
             "Maximum file length to append (seconds)"
@@ -139,6 +139,10 @@ class MainWidget(QtWidgets.QWidget):
         # Set placeholder text
         self.silenceduration_input.setPlaceholderText("0.5")
         self.maxduration_input.setPlaceholderText("infinite")
+        self.outputfolder_input.setPlaceholderText("Default: <input file path>_sausage")
+        self.exclusionfield_input.setPlaceholderText(
+            "Insert keywords separated with commas"
+        )
 
         # Set Validators
         v = QtGui.QDoubleValidator()
