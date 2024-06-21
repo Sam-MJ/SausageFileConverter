@@ -76,7 +76,7 @@ class MainWidget(QtWidgets.QWidget):
         # create widgets
         self.inputfolder_label = QtWidgets.QLabel("Input Folder:")
         self.outputfolder_label = QtWidgets.QLabel("Output Folder:")
-        self.appendtag_label = QtWidgets.QLabel("Append suffix to file name:")
+        self.appendtag_label = QtWidgets.QLabel("Suffix to append to file name:")
         self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing:")
         self.silenceduration_label = QtWidgets.QLabel("Silence between clips (seconds)")
         self.maxduration_label = QtWidgets.QLabel(
@@ -90,8 +90,8 @@ class MainWidget(QtWidgets.QWidget):
         self.silenceduration_input = QtWidgets.QLineEdit()
         self.maxduration_input = QtWidgets.QLineEdit()
 
-        self.inputfolder_button = QtWidgets.QPushButton("In Browse")
-        self.outputfolder_button = QtWidgets.QPushButton("Out Browse")
+        self.inputfolder_button = QtWidgets.QPushButton("Browse")
+        self.outputfolder_button = QtWidgets.QPushButton("Browse")
         self.convert_button = QtWidgets.QPushButton("Sausage!")
 
         self.copyfiles_checkbox = QtWidgets.QCheckBox(
@@ -143,6 +143,7 @@ class MainWidget(QtWidgets.QWidget):
         self.exclusionfield_input.setPlaceholderText(
             "Insert keywords separated with commas"
         )
+        self.appendtag_input.setPlaceholderText("e.g. <file name>_sausage")
 
         # Set Validators
         v = QtGui.QDoubleValidator()
@@ -193,6 +194,11 @@ class MainWidget(QtWidgets.QWidget):
 
         if folder:
             self.inputfolder_input.setText(folder)
+
+        if not self.outputfolder_input.text():
+            self.outputfolder_input.setPlaceholderText(
+                self.inputfolder_input.text() + "_sausage"
+            )
 
     def select_out_folder(self):
         """Output Folder selection browser"""
