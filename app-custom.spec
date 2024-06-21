@@ -22,11 +22,12 @@ hiddenimports += [
     "uuid",
     "worker",
     "utils",
-    "bcrypt",
     "datetime",
     "os",
     "json",
-    "dotenv"
+    "dotenv",
+    "math",
+    "natsort"
 ]
 
 
