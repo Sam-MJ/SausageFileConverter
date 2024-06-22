@@ -7,13 +7,13 @@ from src import metadata_v2
 def test_validate_data():
 
     # testfile 1 has soundminer chunk
-    test_file1 = Path(r"tests\files\SPRTSkate_Bail Break Board_B00M_MBSB.wav")
+    test_file1 = Path(r"tests/files/SPRTSkate_Bail Break Board_B00M_MBSB.wav")
 
     with open(test_file1, "rb") as f:
         file1 = f.read()
 
     backup_test_file = Path(
-        r"tests\files\backup\SPRTSkate_Bail Break Board_B00M_MBSB.wav"
+        r"tests/files/backup/SPRTSkate_Bail Break Board_B00M_MBSB.wav"
     )
 
     with open(backup_test_file, "rb") as f:
@@ -22,12 +22,12 @@ def test_validate_data():
     assert file1 == file1_b
 
     # file 2 has nonsence all over it and an img imbedded
-    test_file2 = Path(r"tests\files\Reaper_Metadata.wav")
+    test_file2 = Path(r"tests/files/Reaper_Metadata.wav")
 
     with open(test_file2, "rb") as f:
         file2 = f.read()
 
-    test_file2_bu = Path(r"tests\files\backup\Reaper_Metadata.wav")
+    test_file2_bu = Path(r"tests/files/backup/Reaper_Metadata.wav")
 
     with open(test_file2_bu, "rb") as f:
         file2_b = f.read()
@@ -37,9 +37,9 @@ def test_validate_data():
 
 def test_assemble():
 
-    test_file1 = Path(r"tests\files\SPRTSkate_Bail Break Board_B00M_MBSB.wav")
+    test_file1 = Path(r"tests/files/SPRTSkate_Bail Break Board_B00M_MBSB.wav")
 
-    test_file2 = Path(r"tests\files\Reaper_Metadata.wav")
+    test_file2 = Path(r"tests/files/Reaper_Metadata.wav")
 
     md = metadata_v2.Metadata_Assembler(
         original_filename=test_file1, new_filename=test_file2
@@ -78,7 +78,7 @@ def test_assemble():
 
     # clean up
     shutil.copy(
-        r"tests\files\backup\Reaper_Metadata.wav",
+        r"tests/files/backup/Reaper_Metadata.wav",
         test_file2,
     )
 

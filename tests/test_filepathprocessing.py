@@ -271,7 +271,7 @@ def test_add_file_tag():
     file = Path(
         "D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN/andrewscott_02_02.wav"
     )
-    tag = "sausage"
+    tag = "_sausage"
 
     out = utils.add_end_tag_to_filename(file, tag=tag)
 

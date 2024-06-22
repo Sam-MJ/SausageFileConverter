@@ -19,12 +19,12 @@ from src import metadata_v2
 
 def test_validate_test_file():
     """Make sure test file doesn't change because OMG"""
-    test_file = Path(r"tests\files\SPRTSkate_Bail Break Board_B00M_MBSB.wav")
+    test_file = Path(r"tests/files/SPRTSkate_Bail Break Board_B00M_MBSB.wav")
     with open(test_file, "rb") as f:
         data = f.read()
 
     backup_test_file = Path(
-        r"tests\files\backup\SPRTSkate_Bail Break Board_B00M_MBSB.wav"
+        r"tests/files/backup/SPRTSkate_Bail Break Board_B00M_MBSB.wav"
     )
 
     with open(backup_test_file, "rb") as f:
@@ -35,7 +35,7 @@ def test_validate_test_file():
 
 def test_read_header():
 
-    test_file = Path(r"tests\files\SPRTSkate_Bail Break Board_B00M_MBSB.wav")
+    test_file = Path(r"tests/files/SPRTSkate_Bail Break Board_B00M_MBSB.wav")
 
     with open(test_file, "rb") as f:
         md = metadata_v2.Metadata_Parser(f)
@@ -49,7 +49,7 @@ def test_read_header():
 
 def test_read_fmt_chunk():
 
-    test_file = Path(r"tests\files\SPRTSkate_Bail Break Board_B00M_MBSB.wav")
+    test_file = Path(r"tests/files/SPRTSkate_Bail Break Board_B00M_MBSB.wav")
 
     with open(test_file, "rb") as f:
         md = metadata_v2.Metadata_Parser(f)
@@ -68,7 +68,7 @@ def test_read_fmt_chunk():
 
 def test_read_generic_metadata():
 
-    test_file = Path(r"tests\files\SPRTSkate_Bail Break Board_B00M_MBSB.wav")
+    test_file = Path(r"tests/files/SPRTSkate_Bail Break Board_B00M_MBSB.wav")
 
     with open(test_file, "rb") as f:
         md = metadata_v2.Metadata_Parser(f)
