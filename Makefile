@@ -1,6 +1,8 @@
-.PHONY: cythonize clean_c_files move_py_files pyinstaller clean_pyd_files move_back_py_files all
+.PHONY: cythonize clean_c_files move_py_files pyinstaller_pc pyinstaller_mac clean_pyd_files move_back_py_files all
 
-all: cythonize clean_c_files move_py_files pyinstaller clean_pyd_files move_back_py_files
+pc: cythonize clean_c_files move_py_files pyinstaller_pc clean_pyd_files move_back_py_files
+
+mac: cythonize clean_c_files move_py_files pyinstaller_mac clean_pyd_files move_back_py_files
 
 cythonize:
 	python setup.py build_ext --inplace
@@ -14,11 +16,15 @@ move_py_files:
 		mv src/$$file "build"; \
 	done
 
-pyinstaller:
+pyinstaller_mac:
+	pyinstaller mac_onefile_app.spec
+
+pyinstaller_pc:
 	pyinstaller app-custom.spec
 
 clean_pyd_files:
 	$(RM) src/*.pyd
+	$(RM) src/*.so
 
 move_back_py_files:
 	for file in $(files); do \
