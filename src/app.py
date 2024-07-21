@@ -14,8 +14,3 @@ if __name__ == "__main__":
 
     app.exec()
     print("Closing...")
-    # when app closes, send updates to server before closing properly
-
-# Extra features
-# TODO Add markers at the start of each file
-# TODO Auto create output folder

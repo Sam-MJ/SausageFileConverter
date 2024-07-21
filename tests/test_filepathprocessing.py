@@ -194,7 +194,7 @@ def test_files_with_variations():
 
 def test_exclude_function():
 
-    exclude_phrase_list = ["abc", "andrew"]
+    exclude_phrase_list = ["abc", "andrew", ""]
     input_list = [
         [
             Path(

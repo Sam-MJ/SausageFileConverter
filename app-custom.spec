@@ -27,7 +27,9 @@ hiddenimports += [
     "json",
     "dotenv",
     "math",
-    "natsort"
+    "natsort",
+    "soxr",
+    "dataclasses"
 ]
 
 

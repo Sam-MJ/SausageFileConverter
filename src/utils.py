@@ -4,6 +4,8 @@ import soundfile
 import numpy
 import math
 import natsort
+import soxr
+from dataclasses import dataclass
 
 import exceptions
 
@@ -160,6 +162,10 @@ def remove_files_with_exclude(files_with_variations: list, exclude_list: list):
         files_with_variations_post_exclude = files_with_variations
         return files_with_variations_post_exclude
 
+    for item in exclude_list:
+        if item == "":
+            exclude_list.pop()
+
     for variation in files_with_variations:
         remove = False
 
@@ -241,42 +247,83 @@ def file_append(
     return the new file name and export the new file to its output folder.
     """
 
+    @dataclass
+    class audio_object:
+        samplerate: int
+        audio_data: numpy.ndarray
+        subtype: str
+        channels: str
+        dtype: str
+
     # append file to combined
     list_of_sound_objects = []
-    samplerates = []
-    subtypes = []
+    dtype = "float64"  # default dtype soundfile uses to read.
+
     for file in single_variation_list:
-        s = soundfile.SoundFile(file, "r")
-        samplerates.append(s.samplerate)
-        subtypes.append(s.subtype)
+        with soundfile.SoundFile(file, "r") as s:
+            data = s.read()
+            list_of_sound_objects.append(
+                audio_object(
+                    samplerate=s.samplerate,
+                    audio_data=data,
+                    subtype=s.subtype,
+                    channels=data.shape[1:],
+                    dtype=data.dtype,
+                )
+            )
 
-        sound_data = s.read()
-        s.close()
+    # check if blocks have the same sample rate and channel count, if not take the highest.
+    for block in list_of_sound_objects:
+        highest_sample_rate = list_of_sound_objects[0].samplerate
+        highest_channel_count = list_of_sound_objects[0].channels
+        subtype = list_of_sound_objects[0].subtype
 
-        list_of_sound_objects.append(sound_data)
+        if block.samplerate > highest_sample_rate:
+            highest_sample_rate = block.samplerate
 
-    # check sample rate and bit depth are all the same over all variations
-    if not samplerates.count(samplerates[0]) == len(samplerates):
-        raise exceptions.SampleRateError("Variations are not of the same sample rate")
+        # print(block.channels)
+        if block.channels > highest_channel_count:
+            # TODO automatically take highest channel count and convert the rest
+            highest_channel_count = block.channels
+            """ raise exceptions.ChannelCountError(
+                "Variations are not of the same channel count"
+            ) """
 
-    if not subtypes.count(subtypes[0]) == len(subtypes):
-        raise exceptions.BitDepthError("Variations are not of the same bit depth")
+        if block.subtype != subtype:
+            raise exceptions.BitDepthError("Variations are not of the same bit depth")
 
-    samplerate = samplerates[0]
-    subtype = subtypes[0]
+    for block in list_of_sound_objects:
+        # resample any blocks that are below the highest sample rate to the highest sample rate
+        if block.samplerate == highest_sample_rate:
+            continue
+        block.audio_data = soxr.resample(
+            block.audio_data, block.samplerate, highest_sample_rate, quality="VHQ"
+        )
 
-    first_file = list_of_sound_objects[0]
-    channels = first_file.shape[1:]
-    dtype = first_file.dtype
+    for block in list_of_sound_objects:
+        # add channels to any below highest channel count
+        if block.channels == highest_channel_count:
+            continue
 
-    # create silence block
-    silence_samples_number = samplerate * silence_duration
-    shape = (int(silence_samples_number),) + channels
-    silence_block = numpy.zeros((shape), dtype)
-
-    # insert into list of files, alternating indexes, i.e 1,3,5,7
-    for i in range(1, len(list_of_sound_objects) * 2 - 1, 2):
-        list_of_sound_objects.insert(i, silence_block)
+        if not block.channels and highest_channel_count[0] == 2:
+            # if mono to stereo
+            """multichannel audio data:
+            first convert 1d array [1,2,3] to:
+            [[1]
+            [2]
+            [3]]
+            then horizonally stack to get
+            [[1, 1],
+            [2, 2],
+            [3, 3]]
+            """
+            block.audio_data = numpy.hstack(
+                (block.audio_data.reshape(-1, 1), block.audio_data.reshape(-1, 1))
+            )
+        else:
+            raise exceptions.ChannelCountError(
+                "variations have different channel counts and are not mono or stereo"
+            )
 
     # create the output path
     file_name = single_variation_list[0]
@@ -286,9 +333,20 @@ def file_append(
     # check if it requires new parent folders
     create_parent_folders(new_filename)
 
-    # write file
-    data = numpy.concatenate(list_of_sound_objects)
-    soundfile.write(new_filename, data, samplerate, subtype=subtype)
+    # get audio data from objects
+    audio_chunks = [audio.audio_data for audio in list_of_sound_objects]
+
+    # create silence block
+    silence_samples_number = highest_sample_rate * silence_duration
+    shape = (int(silence_samples_number),) + highest_channel_count
+    silence_block = numpy.zeros((shape), dtype)
+
+    # insert into list of files, alternating indexes, i.e 1,3,5,7
+    for i in range(1, len(audio_chunks) * 2 - 1, 2):
+        audio_chunks.insert(i, silence_block)
+
+    data = numpy.concatenate(audio_chunks)
+    soundfile.write(new_filename, data, highest_sample_rate, subtype=subtype)
 
     print("Write: ", new_filename)
     return new_filename

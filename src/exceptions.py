@@ -1,9 +1,11 @@
 # appender
-class SampleRateError(Exception):
-    pass
 
 
 class BitDepthError(Exception):
+    pass
+
+
+class ChannelCountError(Exception):
     pass
 
 

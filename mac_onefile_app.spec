@@ -28,7 +28,11 @@ a = Analysis(
     "datetime",
     "os",
     "json",
-    "dotenv"
+    "dotenv",
+    "math",
+    "natsort",
+    "soxr",
+    "dataclasses"
 ],
     hookspath=[],
     hooksconfig={},
