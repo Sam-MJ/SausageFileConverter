@@ -6,6 +6,11 @@ from pprint import pprint
 import taglib
 import traceback
 
+import numpy
+import soxr
+import soundfile
+from dataclasses import dataclass
+
 import utils
 import exceptions
 from metadata_v2 import Metadata_Assembler
@@ -22,6 +27,7 @@ class Worker(QtCore.QObject):
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
     processed = QtCore.Signal(bool)
+    logger = QtCore.Signal(str, bool, str, str)
 
     @QtCore.Slot(str)
     def all_inputs(
@@ -130,9 +136,12 @@ class Worker(QtCore.QObject):
             utils.create_parent_folders(out_path)
             shutil.copy(file, out_path.parent)
         elif file.is_dir():
-            shutil.copytree(file, out_path)
+            # if folder already exists, don't copy it.
+            if not out_path.exists():
+                shutil.copytree(file, out_path)
 
         print(f"Copy: {file} to: {out_path}")
+        self.logger.emit("Copy", True, str(file), str(out_path))
 
     def concatination_handler(self, single_variation_list: list):
         """Take a list of files to be appended together, create a new file from it.
@@ -141,7 +150,7 @@ class Worker(QtCore.QObject):
         original_file_name = single_variation_list[0]
 
         try:
-            new_file_name = utils.file_append(
+            new_file_name = self.file_append(
                 single_variation_list,
                 self.silence_duration,
                 self.input_folder,
@@ -151,19 +160,22 @@ class Worker(QtCore.QObject):
 
             self.write_metadata(original_file_name, new_file_name)
         except (
-            exceptions.SampleRateError,
             exceptions.BitDepthError,
             exceptions.InvalidRIFFFileException,
             exceptions.FormatChunkError,
             exceptions.InvalidWavFileException,
             exceptions.EmptyFileExeption,
             exceptions.InvalidSizeValue,
+            exceptions.FormatChunkError,
+            exceptions.SubchunkIDParsingError,
         ) as e:
             print(f"{e}: file: {original_file_name}")
+            self.logger.emit("Write", False, str(original_file_name), e)
 
         except Exception as e:
             print(f"Unexpected Error: {e}: file {original_file_name}")
             print(traceback.print_exc())
+            self.logger.emit("Write", False, str(original_file_name), e)
 
     def write_metadata(self, original_file_name: Path, new_file_name: Path) -> None:
         """Write the metadata from the first file in the list (of the un-appended files) to the new sausage file"""
@@ -215,3 +227,128 @@ class Worker(QtCore.QObject):
             # When all are done, send the last percent to the update bar
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_without_variations))
+
+    def file_append(
+        self,
+        single_variation_list: list,
+        silence_duration: float,
+        input_folder: Path,
+        output_folder: Path,
+        append_tag: str,
+    ) -> Path:
+        """
+        Take a list of one set of files with variations i.e impact_01.wav, impact_02.wav, impact_03.wav and append them together.
+        return the new file name and export the new file to its output folder.
+        """
+
+        @dataclass
+        class audio_object:
+            samplerate: int
+            audio_data: numpy.ndarray
+            subtype: str
+            channels: str
+            dtype: str
+
+        # append file to combined
+        list_of_sound_objects = []
+        dtype = "float64"  # default dtype soundfile uses to read.
+
+        for file in single_variation_list:
+            with soundfile.SoundFile(file, "r") as s:
+                data = s.read()
+                list_of_sound_objects.append(
+                    audio_object(
+                        samplerate=s.samplerate,
+                        audio_data=data,
+                        subtype=s.subtype,
+                        channels=data.shape[1:],
+                        dtype=data.dtype,
+                    )
+                )
+
+        # check if blocks have the same sample rate and channel count, if not take the highest.
+        for block in list_of_sound_objects:
+            highest_sample_rate = list_of_sound_objects[0].samplerate
+            highest_channel_count = list_of_sound_objects[0].channels
+            subtype = list_of_sound_objects[0].subtype
+
+            if block.samplerate > highest_sample_rate:
+                highest_sample_rate = block.samplerate
+
+            # print(block.channels)
+            if block.channels > highest_channel_count:
+                # TODO automatically take highest channel count and convert the rest
+                highest_channel_count = block.channels
+                """ raise exceptions.ChannelCountError(
+                    "Variations are not of the same channel count"
+                ) """
+
+            if block.subtype != subtype:
+                raise exceptions.BitDepthError(
+                    "Variations are not of the same bit depth"
+                )
+
+        for block in list_of_sound_objects:
+            # resample any blocks that are below the highest sample rate to the highest sample rate
+            if block.samplerate == highest_sample_rate:
+                continue
+            block.audio_data = soxr.resample(
+                block.audio_data, block.samplerate, highest_sample_rate, quality="VHQ"
+            )
+
+        for block in list_of_sound_objects:
+            # add channels to any below highest channel count
+            if block.channels == highest_channel_count:
+                continue
+
+            if not block.channels and highest_channel_count[0] == 2:
+                # if mono to stereo
+                """multichannel audio data:
+                first convert 1d array [1,2,3] to:
+                [[1]
+                [2]
+                [3]]
+                then horizonally stack to get
+                [[1, 1],
+                [2, 2],
+                [3, 3]]
+                """
+                block.audio_data = numpy.hstack(
+                    (block.audio_data.reshape(-1, 1), block.audio_data.reshape(-1, 1))
+                )
+            else:
+                raise exceptions.ChannelCountError(
+                    "variations have different channel counts that are not mono or stereo"
+                )
+
+        # create the output path
+        file_name_path = single_variation_list[0]
+        new_filename_path = utils.create_output_path(
+            file_name_path, input_folder, output_folder
+        )
+        new_filename_path = utils.add_end_tag_to_filename(
+            new_filename_path, tag=append_tag
+        )
+
+        # check if it requires new parent folders
+        utils.create_parent_folders(new_filename_path)
+
+        # get audio data from objects
+        audio_chunks = [audio.audio_data for audio in list_of_sound_objects]
+
+        # create silence block
+        silence_samples_number = highest_sample_rate * silence_duration
+        shape = (int(silence_samples_number),) + highest_channel_count
+        silence_block = numpy.zeros((shape), dtype)
+
+        # insert into list of files, alternating indexes, i.e 1,3,5,7
+        for i in range(1, len(audio_chunks) * 2 - 1, 2):
+            audio_chunks.insert(i, silence_block)
+
+        data = numpy.concatenate(audio_chunks)
+        soundfile.write(new_filename_path, data, highest_sample_rate, subtype=subtype)
+
+        print("Write: ", str(new_filename_path))
+        self.logger.emit("Write", True, str(file_name_path), str(new_filename_path))
+
+        return new_filename_path

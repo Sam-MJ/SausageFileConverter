@@ -1,6 +1,4 @@
 # appender
-
-
 class BitDepthError(Exception):
     pass
 

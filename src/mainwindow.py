@@ -68,6 +68,23 @@ class MainWidget(QtWidgets.QWidget):
     def progress_int(self, prog_int):
         self.progress.setValue(prog_int)
 
+    @QtCore.Slot(str, bool, str, str)
+    def update_logger(self, function, success, in_path, out_path):
+        row_position = self.logger.rowCount()
+        self.logger.insertRow(row_position)
+        self.logger.setItem(row_position, 0, QtWidgets.QTableWidgetItem(function))
+        if success:
+            self.logger.item(row_position, 0).setBackground(QtGui.QColor(174, 220, 174))
+        else:
+            self.logger.item(row_position, 0).setBackground(QtGui.QColor(197, 79, 77))
+
+        self.logger.setItem(row_position, 1, QtWidgets.QTableWidgetItem(in_path))
+        self.logger.setItem(row_position, 2, QtWidgets.QTableWidgetItem(out_path))
+
+        self.logger.verticalScrollBar().setValue(
+            self.logger.verticalScrollBar().maximum()
+        )
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -82,6 +99,14 @@ class MainWidget(QtWidgets.QWidget):
         self.maxduration_label = QtWidgets.QLabel(
             "Maximum file length to append (seconds)"
         )
+        self.logger = QtWidgets.QTableWidget()
+        self.logger.setColumnCount(3)
+        self.logger.setHorizontalHeaderLabels(["Function", "In_path", "out_path"])
+        self.logger.setColumnWidth(0, 100)
+        # set other two to stretch
+        header = self.logger.horizontalHeader()
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
 
         self.inputfolder_input = QtWidgets.QLineEdit()
         self.outputfolder_input = QtWidgets.QLineEdit()
@@ -134,6 +159,7 @@ class MainWidget(QtWidgets.QWidget):
         layout.addLayout(silence_and_maxduration_layout)
         layout.addLayout(checkbox_layout)
         layout.addWidget(self.convert_button)
+        layout.addWidget(self.logger)
 
         self.setLayout(layout)
         # Set placeholder text
@@ -171,6 +197,7 @@ class MainWidget(QtWidgets.QWidget):
         self.submit_signal.connect(self.worker.all_inputs)
         self.worker.number_of_files.connect(self.number_of_files)
         self.worker.progress.connect(self.progress_int)
+        self.worker.logger.connect(self.update_logger)
         # self.worker.processed.connect(self.telem.on_process)
         self.worker.progress.connect(self.telem.on_progress)
 
