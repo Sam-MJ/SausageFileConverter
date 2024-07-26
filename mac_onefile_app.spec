@@ -21,6 +21,7 @@ a = Analysis(
     "telem",
     "metadata_v2",
     "exceptions",
+    "file_tree",
     "requests",
     "uuid",
     "worker",

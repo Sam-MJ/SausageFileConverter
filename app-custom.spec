@@ -18,6 +18,7 @@ hiddenimports += [
     "telem",
     "metadata_v2",
     "exceptions",
+    "file_tree",
     "requests",
     "uuid",
     "worker",

@@ -1,7 +1,11 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 from pathlib import Path
+
 from worker import Worker
 from telem import Telem
+from utils import get_files
+from file_tree import TreeModel, FilterProxyModel
+
 import sys
 import os
 
@@ -90,6 +94,9 @@ class MainWidget(QtWidgets.QWidget):
 
         self.ctrl = {"break": False, "files_created": 0}
 
+        self.model = TreeModel([], None)
+        self.proxy_model = FilterProxyModel()
+
         # create widgets
         self.inputfolder_label = QtWidgets.QLabel("Input Folder:")
         self.outputfolder_label = QtWidgets.QLabel("Output Folder:")
@@ -99,6 +106,10 @@ class MainWidget(QtWidgets.QWidget):
         self.maxduration_label = QtWidgets.QLabel(
             "Maximum file length to append (seconds)"
         )
+
+        self.tree_view = QtWidgets.QTreeView()
+        self.tree_view.setModel(self.proxy_model)
+
         self.logger = QtWidgets.QTableWidget()
         self.logger.setColumnCount(3)
         self.logger.setHorizontalHeaderLabels(["Function", "In_path", "out_path"])
@@ -130,20 +141,25 @@ class MainWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()  # vertical layout
 
         # horizontal layout to place in vertical layout
-        textfield_layout = QtWidgets.QGridLayout()
-        textfield_layout.addWidget(self.inputfolder_label, 0, 0)
-        textfield_layout.addWidget(self.inputfolder_input, 0, 1)
-        textfield_layout.addWidget(self.inputfolder_button, 0, 2)
-        # output
-        textfield_layout.addWidget(self.outputfolder_label, 1, 0)
-        textfield_layout.addWidget(self.outputfolder_input, 1, 1)
-        textfield_layout.addWidget(self.outputfolder_button, 1, 2)
+        textfield1_layout = QtWidgets.QGridLayout()
+        textfield1_layout.addWidget(self.inputfolder_label, 0, 0)
+        textfield1_layout.addWidget(self.inputfolder_input, 0, 1)
+        textfield1_layout.addWidget(self.inputfolder_button, 0, 2)
+
         # exclusion field
-        textfield_layout.addWidget(self.exclusionfield_label, 2, 0)
-        textfield_layout.addWidget(self.exclusionfield_input, 2, 1)
+        textfield2_layout = QtWidgets.QGridLayout()
+        textfield2_layout.addWidget(self.exclusionfield_label, 0, 0)
+        textfield2_layout.addWidget(self.exclusionfield_input, 0, 1)
+
         # append field
-        textfield_layout.addWidget(self.appendtag_label, 3, 0)
-        textfield_layout.addWidget(self.appendtag_input, 3, 1)
+        textfield2_layout.addWidget(self.appendtag_label, 2, 0)
+        textfield2_layout.addWidget(self.appendtag_input, 2, 1)
+
+        # output
+        textfield3_layout = QtWidgets.QGridLayout()
+        textfield3_layout.addWidget(self.outputfolder_input, 3, 1)
+        textfield3_layout.addWidget(self.outputfolder_button, 3, 2)
+        textfield3_layout.addWidget(self.outputfolder_label, 3, 0)
 
         silence_and_maxduration_layout = QtWidgets.QHBoxLayout()
         silence_and_maxduration_layout.addWidget(self.silenceduration_label)
@@ -155,9 +171,12 @@ class MainWidget(QtWidgets.QWidget):
         checkbox_layout.addWidget(self.copyfiles_checkbox)
         checkbox_layout.addWidget(self.foldersinfolders_checkbox)
 
-        layout.addLayout(textfield_layout)
+        layout.addLayout(textfield1_layout)
+        layout.addWidget(self.tree_view)
+        layout.addLayout(textfield2_layout)
         layout.addLayout(silence_and_maxduration_layout)
         layout.addLayout(checkbox_layout)
+        layout.addLayout(textfield3_layout)
         layout.addWidget(self.convert_button)
         layout.addWidget(self.logger)
 
@@ -204,6 +223,7 @@ class MainWidget(QtWidgets.QWidget):
         # add Signals to Buttons
         self.inputfolder_button.clicked.connect(self.select_in_folder)
         self.outputfolder_button.clicked.connect(self.select_out_folder)
+        self.exclusionfield_input.textChanged.connect(self.proxy_model.setFilterText)
 
         self.convert_button.clicked.connect(self.process)
 
@@ -221,6 +241,13 @@ class MainWidget(QtWidgets.QWidget):
 
         if folder:
             self.inputfolder_input.setText(folder)
+
+            audio_files, non_audio_files = get_files(Path(folder), True)
+
+            self.model = TreeModel(audio_files, Path(folder))
+            self.proxy_model.setSourceModel(self.model)
+
+            self.tree_view.setModel(self.proxy_model)
 
         if not self.outputfolder_input.text():
             self.outputfolder_input.setPlaceholderText(

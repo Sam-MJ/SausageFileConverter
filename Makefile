@@ -10,7 +10,7 @@ cythonize:
 clean_c_files:
 	$(RM) src/*.c
 
-files = mainwindow.py metadata_v2.py telem.py worker.py
+files = mainwindow.py metadata_v2.py telem.py worker.py file_tree.py
 move_py_files:
 	for file in $(files); do \
 		mv src/$$file "build"; \

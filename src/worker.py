@@ -160,6 +160,8 @@ class Worker(QtCore.QObject):
 
             self.write_metadata(original_file_name, new_file_name)
         except (
+            soundfile.LibsndfileError,
+            exceptions.ChannelCountError,
             exceptions.BitDepthError,
             exceptions.InvalidRIFFFileException,
             exceptions.FormatChunkError,
@@ -170,7 +172,7 @@ class Worker(QtCore.QObject):
             exceptions.SubchunkIDParsingError,
         ) as e:
             print(f"{e}: file: {original_file_name}")
-            self.logger.emit("Write", False, str(original_file_name), e)
+            self.logger.emit("Write", False, str(original_file_name), str(e))
 
         except Exception as e:
             print(f"Unexpected Error: {e}: file {original_file_name}")
@@ -279,13 +281,10 @@ class Worker(QtCore.QObject):
             if block.channels > highest_channel_count:
                 # TODO automatically take highest channel count and convert the rest
                 highest_channel_count = block.channels
-                """ raise exceptions.ChannelCountError(
-                    "Variations are not of the same channel count"
-                ) """
 
             if block.subtype != subtype:
                 raise exceptions.BitDepthError(
-                    "Variations are not of the same bit depth"
+                    "Error: Variations are not of the same bit depth"
                 )
 
         for block in list_of_sound_objects:
@@ -318,7 +317,7 @@ class Worker(QtCore.QObject):
                 )
             else:
                 raise exceptions.ChannelCountError(
-                    "variations have different channel counts that are not mono or stereo"
+                    "Error: Variations have different channel counts that are not mono or stereo"
                 )
 
         # create the output path

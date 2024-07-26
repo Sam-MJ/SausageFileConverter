@@ -1,21 +1,25 @@
-from src import utils
+from src import worker
 from pathlib import Path
 import soundfile as sf
 import numpy as np
+import pytest
 
 
 def test_file_append_different_sample_rates():
     single_variation_list = [
-        Path("tests/files/test_file_48.wav"),
-        Path("tests/files/test_file_96.wav"),
-        Path("tests/files/test_file_192.wav"),
+        Path("tests/files/diffsamplerate/test_file_48.wav"),
+        Path("tests/files/diffsamplerate/test_file_96.wav"),
+        Path("tests/files/diffsamplerate/test_file_192.wav"),
     ]
     silence_duration = 0.5
-    input_folder = Path(r"tests/files")
+    input_folder = Path(r"tests/files/diffsamplerate")
     output_folder = Path(r"tests/files/outputs")
     append_tag = ""
 
-    utils.file_append(
+    ctrl = {}
+    w = worker.Worker(ctrl)
+
+    w.file_append(
         single_variation_list, silence_duration, input_folder, output_folder, append_tag
     )
 
@@ -34,15 +38,18 @@ def test_file_append_different_sample_rates():
 def test_file_append_mono_and_stereo_variations():
     # mono and stereo in the same set of variations, mono should be converted to stereo format and then concatenated
     single_variation_list = [
-        Path("tests/files/channels_test_file_01.wav"),
-        Path("tests/files/channels_test_file_02.wav"),
+        Path("tests/files/diffchannels/channels_test_file_01.wav"),
+        Path("tests/files/diffchannels/channels_test_file_02.wav"),
     ]
     silence_duration = 0.5
-    input_folder = Path(r"tests/files")
+    input_folder = Path(r"tests/files/diffchannels")
     output_folder = Path(r"tests/files/outputs")
     append_tag = ""
 
-    utils.file_append(
+    ctrl = {}
+    w = worker.Worker(ctrl)
+
+    w.file_append(
         single_variation_list, silence_duration, input_folder, output_folder, append_tag
     )
 
@@ -59,3 +66,26 @@ def test_file_append_mono_and_stereo_variations():
 
     # delete output file when we're done
     output_file.unlink()
+
+
+def test_non_audio_or_empty():
+    single_variation_list = [
+        Path("tests/files/notaudio/notaudiofile_1.wav"),
+        Path("tests/files/notaudio/notaudiofile_2.wav"),
+    ]
+    silence_duration = 0.5
+    input_folder = Path(r"tests/files/notaudio")
+    output_folder = Path(r"tests/files/outputs")
+    append_tag = ""
+
+    ctrl = {}
+    w = worker.Worker(ctrl)
+
+    with pytest.raises(sf.LibsndfileError):
+        w.file_append(
+            single_variation_list,
+            silence_duration,
+            input_folder,
+            output_folder,
+            append_tag,
+        )
