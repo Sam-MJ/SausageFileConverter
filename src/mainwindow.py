@@ -101,7 +101,7 @@ class MainWidget(QtWidgets.QWidget):
         self.inputfolder_label = QtWidgets.QLabel("Input Folder:")
         self.outputfolder_label = QtWidgets.QLabel("Output Folder:")
         self.appendtag_label = QtWidgets.QLabel("Suffix to append to file name:")
-        self.exclusionfield_label = QtWidgets.QLabel("Exclude files containing:")
+        self.exclusionfield_label = QtWidgets.QLabel("Filter files:")
         self.silenceduration_label = QtWidgets.QLabel("Silence between clips (seconds)")
         self.maxduration_label = QtWidgets.QLabel(
             "Maximum file length to append (seconds)"
@@ -141,42 +141,42 @@ class MainWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()  # vertical layout
 
         # horizontal layout to place in vertical layout
-        textfield1_layout = QtWidgets.QGridLayout()
-        textfield1_layout.addWidget(self.inputfolder_label, 0, 0)
-        textfield1_layout.addWidget(self.inputfolder_input, 0, 1)
-        textfield1_layout.addWidget(self.inputfolder_button, 0, 2)
+        input_directory_layout = QtWidgets.QGridLayout()
+        input_directory_layout.addWidget(self.inputfolder_label, 0, 0)
+        input_directory_layout.addWidget(self.inputfolder_input, 0, 1)
+        input_directory_layout.addWidget(self.inputfolder_button, 0, 2)
 
         # exclusion field
-        textfield2_layout = QtWidgets.QGridLayout()
-        textfield2_layout.addWidget(self.exclusionfield_label, 0, 0)
-        textfield2_layout.addWidget(self.exclusionfield_input, 0, 1)
-
-        # append field
-        textfield2_layout.addWidget(self.appendtag_label, 2, 0)
-        textfield2_layout.addWidget(self.appendtag_input, 2, 1)
+        filter_files_layout = QtWidgets.QGridLayout()
+        filter_files_layout.addWidget(self.exclusionfield_label, 0, 0)
+        filter_files_layout.addWidget(self.exclusionfield_input, 0, 1)
 
         # output
-        textfield3_layout = QtWidgets.QGridLayout()
-        textfield3_layout.addWidget(self.outputfolder_input, 3, 1)
-        textfield3_layout.addWidget(self.outputfolder_button, 3, 2)
-        textfield3_layout.addWidget(self.outputfolder_label, 3, 0)
+        output_directory_layout = QtWidgets.QGridLayout()
+        output_directory_layout.addWidget(self.outputfolder_input, 3, 1)
+        output_directory_layout.addWidget(self.outputfolder_button, 3, 2)
+        output_directory_layout.addWidget(self.outputfolder_label, 3, 0)
 
-        silence_and_maxduration_layout = QtWidgets.QHBoxLayout()
-        silence_and_maxduration_layout.addWidget(self.silenceduration_label)
-        silence_and_maxduration_layout.addWidget(self.silenceduration_input)
-        silence_and_maxduration_layout.addWidget(self.maxduration_label)
-        silence_and_maxduration_layout.addWidget(self.maxduration_input)
+        side_bar_layout = QtWidgets.QGridLayout()
+        side_bar_layout.addWidget(self.silenceduration_label, 0, 0)
+        side_bar_layout.addWidget(self.silenceduration_input, 0, 1)
+        side_bar_layout.addWidget(self.maxduration_label, 1, 0)
+        side_bar_layout.addWidget(self.maxduration_input, 1, 1)
+        side_bar_layout.addWidget(self.appendtag_label, 2, 0)
+        side_bar_layout.addWidget(self.appendtag_input, 2, 1)
+        # checkboxes
+        side_bar_layout.addWidget(self.copyfiles_checkbox, 3, 0)
+        side_bar_layout.addWidget(self.foldersinfolders_checkbox, 4, 0)
 
-        checkbox_layout = QtWidgets.QHBoxLayout()
-        checkbox_layout.addWidget(self.copyfiles_checkbox)
-        checkbox_layout.addWidget(self.foldersinfolders_checkbox)
+        middle_layout = QtWidgets.QGridLayout()
+        middle_layout.addLayout(side_bar_layout, 0, 0)
+        middle_layout.addWidget(self.tree_view, 0, 1)
 
-        layout.addLayout(textfield1_layout)
-        layout.addWidget(self.tree_view)
-        layout.addLayout(textfield2_layout)
-        layout.addLayout(silence_and_maxduration_layout)
-        layout.addLayout(checkbox_layout)
-        layout.addLayout(textfield3_layout)
+        layout.addLayout(input_directory_layout)
+        layout.addLayout(middle_layout)
+        layout.addLayout(filter_files_layout)
+        layout.addLayout(side_bar_layout)
+        layout.addLayout(output_directory_layout)
         layout.addWidget(self.convert_button)
         layout.addWidget(self.logger)
 
