@@ -182,7 +182,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         for file in list_of_files:
             has_parent_in_list(file)
 
-        return parent_dict
+        # return parent_dict
 
 
 class FilterProxyModel(QtCore.QSortFilterProxyModel):

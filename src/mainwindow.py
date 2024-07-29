@@ -3,7 +3,7 @@ from pathlib import Path
 
 from worker import Worker
 from telem import Telem
-from utils import get_files
+from utils import get_files, file_tokenization, find_files_with_variations
 from file_tree import TreeModel, FilterProxyModel
 
 import sys
@@ -103,12 +103,18 @@ class MainWidget(QtWidgets.QWidget):
         self.appendtag_label = QtWidgets.QLabel("Suffix to append to file name:")
         self.exclusionfield_label = QtWidgets.QLabel("Filter files:")
         self.silenceduration_label = QtWidgets.QLabel("Silence between clips (seconds)")
-        self.maxduration_label = QtWidgets.QLabel(
-            "Maximum file length to append (seconds)"
-        )
+        self.maxduration_label = QtWidgets.QLabel("Maximum file length to append")
 
         self.tree_view = QtWidgets.QTreeView()
         self.tree_view.setModel(self.proxy_model)
+        # fix scroll bars
+        self.tree_view.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        tree_header = self.tree_view.header()
+        tree_header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        tree_header.setDefaultSectionSize(tree_header.minimumSectionSize())
+        tree_header.setStretchLastSection(False)
 
         self.logger = QtWidgets.QTableWidget()
         self.logger.setColumnCount(3)
@@ -165,8 +171,8 @@ class MainWidget(QtWidgets.QWidget):
         side_bar_layout.addWidget(self.appendtag_label, 2, 0)
         side_bar_layout.addWidget(self.appendtag_input, 2, 1)
         # checkboxes
-        side_bar_layout.addWidget(self.copyfiles_checkbox, 3, 0)
-        side_bar_layout.addWidget(self.foldersinfolders_checkbox, 4, 0)
+        side_bar_layout.addWidget(self.copyfiles_checkbox, 3, 0, 1, 2)
+        side_bar_layout.addWidget(self.foldersinfolders_checkbox, 4, 0, 1, 2)
 
         middle_layout = QtWidgets.QGridLayout()
         middle_layout.addLayout(side_bar_layout, 0, 0)
@@ -243,8 +249,15 @@ class MainWidget(QtWidgets.QWidget):
             self.inputfolder_input.setText(folder)
 
             audio_files, non_audio_files = get_files(Path(folder), True)
+            tokenized_files = file_tokenization(audio_files)
+            files_with_variations = find_files_with_variations(tokenized_files)
+            # flattened
+            flat = []
+            for listoflist in files_with_variations:
+                for lst in listoflist:
+                    flat.append(lst)
 
-            self.model = TreeModel(audio_files, Path(folder))
+            self.model = TreeModel(flat, Path(folder))
             self.proxy_model.setSourceModel(self.model)
 
             self.tree_view.setModel(self.proxy_model)
