@@ -116,6 +116,8 @@ class MainWidget(QtWidgets.QWidget):
         tree_header.setDefaultSectionSize(tree_header.minimumSectionSize())
         tree_header.setStretchLastSection(False)
 
+        self.tree_view.setExpandsOnDoubleClick(False)
+
         self.logger = QtWidgets.QTableWidget()
         self.logger.setColumnCount(3)
         self.logger.setHorizontalHeaderLabels(["Function", "In_path", "out_path"])
@@ -127,11 +129,10 @@ class MainWidget(QtWidgets.QWidget):
 
         self.inputfolder_input = QtWidgets.QLineEdit()
         self.outputfolder_input = QtWidgets.QLineEdit()
-        self.appendtag_input = QtWidgets.QLineEdit()
         self.exclusionfield_input = QtWidgets.QLineEdit()
+        self.appendtag_input = QtWidgets.QLineEdit()
         self.silenceduration_input = QtWidgets.QLineEdit()
         self.maxduration_input = QtWidgets.QLineEdit()
-
         self.inputfolder_button = QtWidgets.QPushButton("Browse")
         self.outputfolder_button = QtWidgets.QPushButton("Browse")
         self.convert_button = QtWidgets.QPushButton("Sausage!")
@@ -142,15 +143,18 @@ class MainWidget(QtWidgets.QWidget):
         self.foldersinfolders_checkbox = QtWidgets.QCheckBox(
             "Process folders in folders", self
         )
+        # default checked
+        self.foldersinfolders_checkbox.setChecked(True)
 
         # add widgets to layouts
         layout = QtWidgets.QVBoxLayout()  # vertical layout
 
         # horizontal layout to place in vertical layout
-        input_directory_layout = QtWidgets.QGridLayout()
-        input_directory_layout.addWidget(self.inputfolder_label, 0, 0)
-        input_directory_layout.addWidget(self.inputfolder_input, 0, 1)
-        input_directory_layout.addWidget(self.inputfolder_button, 0, 2)
+        input_options_layout = QtWidgets.QGridLayout()
+        input_options_layout.addWidget(self.inputfolder_label, 0, 0)
+        input_options_layout.addWidget(self.inputfolder_input, 0, 1)
+        input_options_layout.addWidget(self.inputfolder_button, 0, 2)
+        input_options_layout.addWidget(self.foldersinfolders_checkbox, 1, 0)
 
         # exclusion field
         filter_files_layout = QtWidgets.QGridLayout()
@@ -166,20 +170,15 @@ class MainWidget(QtWidgets.QWidget):
         side_bar_layout = QtWidgets.QGridLayout()
         side_bar_layout.addWidget(self.silenceduration_label, 0, 0)
         side_bar_layout.addWidget(self.silenceduration_input, 0, 1)
-        side_bar_layout.addWidget(self.maxduration_label, 1, 0)
-        side_bar_layout.addWidget(self.maxduration_input, 1, 1)
-        side_bar_layout.addWidget(self.appendtag_label, 2, 0)
-        side_bar_layout.addWidget(self.appendtag_input, 2, 1)
+        side_bar_layout.addWidget(self.maxduration_label, 0, 2)
+        side_bar_layout.addWidget(self.maxduration_input, 0, 3)
+        side_bar_layout.addWidget(self.appendtag_label, 0, 4)
+        side_bar_layout.addWidget(self.appendtag_input, 0, 5)
         # checkboxes
         side_bar_layout.addWidget(self.copyfiles_checkbox, 3, 0, 1, 2)
-        side_bar_layout.addWidget(self.foldersinfolders_checkbox, 4, 0, 1, 2)
 
-        middle_layout = QtWidgets.QGridLayout()
-        middle_layout.addLayout(side_bar_layout, 0, 0)
-        middle_layout.addWidget(self.tree_view, 0, 1)
-
-        layout.addLayout(input_directory_layout)
-        layout.addLayout(middle_layout)
+        layout.addLayout(input_options_layout)
+        layout.addWidget(self.tree_view)
         layout.addLayout(filter_files_layout)
         layout.addLayout(side_bar_layout)
         layout.addLayout(output_directory_layout)
@@ -230,6 +229,7 @@ class MainWidget(QtWidgets.QWidget):
         self.inputfolder_button.clicked.connect(self.select_in_folder)
         self.outputfolder_button.clicked.connect(self.select_out_folder)
         self.exclusionfield_input.textChanged.connect(self.proxy_model.setFilterText)
+        self.tree_view.doubleClicked.connect(self.add_item_to_exclusionfield)
 
         self.convert_button.clicked.connect(self.process)
 
@@ -248,10 +248,15 @@ class MainWidget(QtWidgets.QWidget):
         if folder:
             self.inputfolder_input.setText(folder)
 
-            audio_files, non_audio_files = get_files(Path(folder), True)
+            audio_files, non_audio_files = get_files(
+                Path(folder), self.foldersinfolders_checkbox.isChecked()
+            )
+
             tokenized_files = file_tokenization(audio_files)
+
             files_with_variations = find_files_with_variations(tokenized_files)
-            # flattened
+
+            # flatten
             flat = []
             for listoflist in files_with_variations:
                 for lst in listoflist:
@@ -278,6 +283,10 @@ class MainWidget(QtWidgets.QWidget):
 
         if folder:
             self.outputfolder_input.setText(folder)
+
+    def add_item_to_exclusionfield(self, item: QtCore.QModelIndex):
+        item_name = self.proxy_model.itemData(item)
+        self.exclusionfield_input.insert(item_name[0] + ", ")
 
     def process(self):
         """

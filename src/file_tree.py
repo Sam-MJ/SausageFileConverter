@@ -191,13 +191,16 @@ class FilterProxyModel(QtCore.QSortFilterProxyModel):
         self.filter_text_list = []
 
     def setFilterText(self, text: str):
-        self.filter_text_list = text.replace(" ", "").split(",")
-
+        self.filter_text_list = text.split(",")
+        temp = []
         # trailing , causes split to an empty list, so remove it.
         for item in self.filter_text_list:
-            if item == "":
-                self.filter_text_list.pop()
+            stripped_item = item.strip()
+            if stripped_item == "":
+                continue
+            temp.append(stripped_item)
 
+        self.filter_text_list = temp
         # updates model when parameters have changed
         self.invalidateFilter()
 
