@@ -149,6 +149,7 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
 
 
 def remove_files_with_exclude(files_with_variations: list, exclude_list: list):
+    """duplicate of FilterAcceptsRow from ProxyModel"""
 
     files_with_variations_post_exclude = []
 
@@ -156,18 +157,14 @@ def remove_files_with_exclude(files_with_variations: list, exclude_list: list):
         files_with_variations_post_exclude = files_with_variations
         return files_with_variations_post_exclude
 
-    for item in exclude_list:
-        if item == "":
-            exclude_list.pop()
-
     for variation in files_with_variations:
         remove = False
 
-        for phrase in exclude_list:
-            if phrase in variation[0].stem:
+        for keyword in exclude_list:
+            if keyword in variation[0].name:
                 remove = True
 
-        if remove == False:
+        if remove is False:
             files_with_variations_post_exclude.append(variation)
 
     return files_with_variations_post_exclude

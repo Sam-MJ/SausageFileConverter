@@ -5,6 +5,7 @@ from worker import Worker
 from telem import Telem
 from utils import get_files, file_tokenization, find_files_with_variations
 from file_tree import TreeModel, FilterProxyModel
+
 import sys
 import os
 
@@ -287,20 +288,6 @@ class MainWidget(QtWidgets.QWidget):
         item_name = self.proxy_model.itemData(item)
         self.exclusionfield_input.insert(item_name[0] + ", ")
 
-    def collect_all_data(self, parent_index) -> list:
-        """collect filtered file paths from proxy_model"""
-        data = []
-
-        model = self.proxy_model
-
-        for row in range(model.rowCount(parent_index)):
-            child_index = model.index(row, 0, parent_index)  # Assuming a single column
-            item_data = model.data(child_index, QtCore.Qt.DisplayRole)
-            data.append(item_data)
-            # Recurse for child items
-            data.extend(self.collect_all_data(child_index))
-        return data
-
     def process(self):
         """
         On 'Sausage' button press, validate file path inputs,
@@ -308,6 +295,23 @@ class MainWidget(QtWidgets.QWidget):
         """
 
         self.ctrl["break"] = False
+
+        def exclusion_str_to_list(self):
+
+            if self.exclusionfield_input.text():
+                exclusion_keyword_list = []
+
+                temp = self.exclusionfield_input.text().split(",")
+                for kw in temp:
+                    keyword = kw.strip()
+                    if keyword == "":
+                        continue
+                    exclusion_keyword_list.append(keyword)
+
+            else:
+                exclusion_keyword_list = []
+
+            return exclusion_keyword_list
 
         def validate(self) -> bool:
             """Validate that input folder paths exist and that the output folder either exists or is set to the same as the input folder."""
@@ -337,11 +341,7 @@ class MainWidget(QtWidgets.QWidget):
             i = self.inputfolder_input.text()
             o = self.outputfolder_input.text()
 
-            # get files to process from view
-            root_index = QtCore.QModelIndex()
-            view_filtered_list = self.collect_all_data(root_index)
-            print(view_filtered_list)
-
+            exclusion_list = exclusion_str_to_list(self)
             append_tag = self.appendtag_input.text()
             # convert inputs to floats to pass them over signal, if they don't exist, create default values.
             if self.silenceduration_input.text():
@@ -358,5 +358,5 @@ class MainWidget(QtWidgets.QWidget):
             foldersinfolders = self.foldersinfolders_checkbox.isChecked()
             # send to Worker object
             self.submit_signal.emit(
-                i, o, sd, md, copybool, foldersinfolders, view_filtered_list, append_tag
+                i, o, sd, md, copybool, foldersinfolders, exclusion_list, append_tag
             )

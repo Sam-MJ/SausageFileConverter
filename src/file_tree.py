@@ -1,5 +1,5 @@
 from pathlib import Path
-from PySide6 import QtCore
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 
 
@@ -191,6 +191,7 @@ class FilterProxyModel(QtCore.QSortFilterProxyModel):
         self.filter_text_list = []
 
     def setFilterText(self, text: str):
+        """duplicate of def exclusion_str_to_list() in mainwindow"""
         self.filter_text_list = text.split(",")
         temp = []
         # trailing , causes split to an empty list, so remove it.
@@ -205,13 +206,15 @@ class FilterProxyModel(QtCore.QSortFilterProxyModel):
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent):
+        """duplicate of remove_files_with_exclude"""
         if not self.filter_text_list:
             return True
         index = self.sourceModel().index(source_row, 0, source_parent)
 
+        # row has to have none of the keywords in it, if any are, return false.
         accepted = []
         for filter_text in self.filter_text_list:
-            if filter_text.lower() in self.sourceModel().data(index, 0).lower():
+            if filter_text in self.sourceModel().data(index, 0):
                 accepted.append(True)
 
         return not any(accepted)

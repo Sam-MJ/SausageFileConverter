@@ -54,6 +54,7 @@ class Worker(QtCore.QObject):
         if self.input_folder == self.output_folder:
             self.output_folder = utils.create_default_file_path(self.output_folder)
 
+        print("aaaa")
         input_files = utils.get_files(self.input_folder, self.foldersinfolders)
         audio_files = input_files[0]
         self.ctrl["files_scanned"] = len(audio_files)
