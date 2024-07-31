@@ -56,11 +56,15 @@ def get_files(in_folder_path: Path, foldersinfolders: bool) -> tuple[list, list]
     return (audio_file_names, non_audio_file_names)
 
 
-def file_tokenization(file_names: list) -> dict:
+def file_tokenization(file_names: list[Path]) -> dict:
     """Split file name into individual words and remove digits, punctuation etc"""
     path_and_tokens = {}  # path and tokens value with numbers removed
 
     for file_path in file_names:
+        # when view filtered files go through this, there can be directories.
+        if file_path.is_dir():
+            continue
+
         name = file_path.stem
 
         tokens = re.findall(r"[a-zA-Z]+|\d+", name)  # words and digits
@@ -146,28 +150,6 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
         files_with_variations.append(matched_files)
 
     return files_with_variations
-
-
-def remove_files_with_exclude(files_with_variations: list, exclude_list: list):
-    """duplicate of FilterAcceptsRow from ProxyModel"""
-
-    files_with_variations_post_exclude = []
-
-    if len(exclude_list) == 0:
-        files_with_variations_post_exclude = files_with_variations
-        return files_with_variations_post_exclude
-
-    for variation in files_with_variations:
-        remove = False
-
-        for keyword in exclude_list:
-            if keyword in variation[0].name:
-                remove = True
-
-        if remove is False:
-            files_with_variations_post_exclude.append(variation)
-
-    return files_with_variations_post_exclude
 
 
 # files to copy

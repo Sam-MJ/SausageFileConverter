@@ -38,8 +38,10 @@ class Worker(QtCore.QObject):
         maxduration_input,
         copybool,
         foldersinfolders,
-        exclusion_list,
+        view_filtered_list,
         append_tag,
+        audio_files,
+        non_audio_files,
     ):
         self.input_folder = Path(inputfolder_input)
         self.output_folder = Path(outputfolder_input)
@@ -47,29 +49,20 @@ class Worker(QtCore.QObject):
         self.max_duration = maxduration_input
         self.copybool = copybool
         self.foldersinfolders = foldersinfolders
-        self.exclusion_list = exclusion_list
+        self.view_filtered_list = view_filtered_list
         self.append_tag = append_tag
+        self.audio_files = audio_files
+        self.non_audio_files = non_audio_files
 
         # if there was no output folder given, it is set to the same as the input folder, this is then appended with _sausage
         if self.input_folder == self.output_folder:
             self.output_folder = utils.create_default_file_path(self.output_folder)
 
-        print("aaaa")
-        input_files = utils.get_files(self.input_folder, self.foldersinfolders)
-        audio_files = input_files[0]
-        self.ctrl["files_scanned"] = len(audio_files)
-        tokenized = utils.file_tokenization(audio_files)
+        tokenized = utils.file_tokenization(view_filtered_list)
         files_with_variations = utils.find_files_with_variations(tokenized)
 
-        # sort excluded files
-        files_with_variations_post_exclude = utils.remove_files_with_exclude(
-            files_with_variations=files_with_variations, exclude_list=exclusion_list
-        )
-
         # sort durations
-        correct_duration_list = self.remove_too_short_files(
-            files_with_variations_post_exclude
-        )
+        correct_duration_list = self.remove_too_short_files(files_with_variations)
 
         # append
         if len(correct_duration_list) > 0:
@@ -80,13 +73,13 @@ class Worker(QtCore.QObject):
             files_without_variations = utils.find_files_without_variations(
                 correct_duration_list, audio_files
             )
-            non_audio_files = input_files[1]
-            files_without_variations.extend(non_audio_files)
+
+            files_without_variations.extend(self.non_audio_files)
 
             if len(files_without_variations) > 0:
                 self.file_copy_pool(files_without_variations)
 
-    def remove_too_short_files(self, files_with_variations: list) -> list:
+    def remove_too_short_files(self, files_with_variations: list[list[Path]]) -> list:
         """Remove files that are too short from the files_with_variations list of lists"""
         correct_duration_list = []
         count = 0
@@ -144,7 +137,7 @@ class Worker(QtCore.QObject):
         print(f"Copy: {file} to: {out_path}")
         self.logger.emit("Copy", True, str(file), str(out_path))
 
-    def concatination_handler(self, single_variation_list: list):
+    def concatination_handler(self, single_variation_list: list[Path]):
         """Take a list of files to be appended together, create a new file from it.
         Read metadata from the first of the old files and write to the new one."""
         # sort variations

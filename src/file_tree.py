@@ -22,7 +22,7 @@ class TreeItem:
         return 1
 
     def data(self):
-        return self.itemData.name
+        return self.itemData
 
     def parent(self):
         return self.parentItem
@@ -50,12 +50,16 @@ class TreeModel(QtCore.QAbstractItemModel):
         if not index.isValid():
             return None
 
-        if role != Qt.ItemDataRole.DisplayRole:
-            return None
+        if role == Qt.ItemDataRole.DisplayRole:
 
-        item = index.internalPointer()
+            item = index.internalPointer()
+            return item.data().name
 
-        return item.data()
+        if role == Qt.ItemDataRole.UserRole:
+            item = index.internalPointer()
+            return item.data()
+
+        return None
 
     def flags(self, index):
         if not index.isValid():

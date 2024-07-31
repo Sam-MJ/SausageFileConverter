@@ -52,8 +52,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
 class MainWidget(QtWidgets.QWidget):
 
-    submit_signal = QtCore.Signal(str, str, float, float, bool, bool, list, str)
-    # input folder, output folder, silence duration, maximum duration, copy files, folders in folder, exclusion field, append tag.
+    submit_signal = QtCore.Signal(
+        str, str, float, float, bool, bool, list, str, list, list
+    )
+    # input folder, output folder, silence duration, maximum duration, copy files, folders in folder, view_filtered_list, append tag, audio_files, non_audio_files.
 
     # progress bar input slots and settings.
     @QtCore.Slot(int, str)
@@ -248,11 +250,12 @@ class MainWidget(QtWidgets.QWidget):
         if folder:
             self.inputfolder_input.setText(folder)
 
-            audio_files, non_audio_files = get_files(
+            self.audio_files, self.non_audio_files = get_files(
                 Path(folder), self.foldersinfolders_checkbox.isChecked()
             )
+            self.ctrl["files_scanned"] = len(self.audio_files)
 
-            tokenized_files = file_tokenization(audio_files)
+            tokenized_files = file_tokenization(self.audio_files)
 
             files_with_variations = find_files_with_variations(tokenized_files)
 
@@ -288,6 +291,20 @@ class MainWidget(QtWidgets.QWidget):
         item_name = self.proxy_model.itemData(item)
         self.exclusionfield_input.insert(item_name[0] + ", ")
 
+    def collect_all_data(self, parent_index) -> list:
+        """collect filtered file paths from proxy_model"""
+        data = []
+
+        model = self.proxy_model
+
+        for row in range(model.rowCount(parent_index)):
+            child_index = model.index(row, 0, parent_index)  # Assuming a single column
+            item_data = model.data(child_index, QtCore.Qt.ItemDataRole.UserRole)
+            data.append(item_data)
+            # Recurse for child items
+            data.extend(self.collect_all_data(child_index))
+        return data
+
     def process(self):
         """
         On 'Sausage' button press, validate file path inputs,
@@ -295,23 +312,6 @@ class MainWidget(QtWidgets.QWidget):
         """
 
         self.ctrl["break"] = False
-
-        def exclusion_str_to_list(self):
-
-            if self.exclusionfield_input.text():
-                exclusion_keyword_list = []
-
-                temp = self.exclusionfield_input.text().split(",")
-                for kw in temp:
-                    keyword = kw.strip()
-                    if keyword == "":
-                        continue
-                    exclusion_keyword_list.append(keyword)
-
-            else:
-                exclusion_keyword_list = []
-
-            return exclusion_keyword_list
 
         def validate(self) -> bool:
             """Validate that input folder paths exist and that the output folder either exists or is set to the same as the input folder."""
@@ -341,7 +341,10 @@ class MainWidget(QtWidgets.QWidget):
             i = self.inputfolder_input.text()
             o = self.outputfolder_input.text()
 
-            exclusion_list = exclusion_str_to_list(self)
+            # get files used in view from proxy model to pass to worker
+            root_index = QtCore.QModelIndex()
+            view_filtered_list = self.collect_all_data(root_index)
+
             append_tag = self.appendtag_input.text()
             # convert inputs to floats to pass them over signal, if they don't exist, create default values.
             if self.silenceduration_input.text():
@@ -358,5 +361,14 @@ class MainWidget(QtWidgets.QWidget):
             foldersinfolders = self.foldersinfolders_checkbox.isChecked()
             # send to Worker object
             self.submit_signal.emit(
-                i, o, sd, md, copybool, foldersinfolders, exclusion_list, append_tag
+                i,
+                o,
+                sd,
+                md,
+                copybool,
+                foldersinfolders,
+                view_filtered_list,
+                append_tag,
+                self.audio_files,
+                self.non_audio_files,
             )
