@@ -47,19 +47,15 @@ class TreeModel(QtCore.QAbstractItemModel):
             return self.rootItem.columnCount()
 
     def data(self, index, role):
+        """If TreeView wants display data, give the path.name, User role returns the full path."""
         if not index.isValid():
             return None
 
         if role == Qt.ItemDataRole.DisplayRole:
-
-            item = index.internalPointer()
-            return item.data().name
+            return index.internalPointer().data().name
 
         if role == Qt.ItemDataRole.UserRole:
-            item = index.internalPointer()
-            return item.data()
-
-        return None
+            return index.internalPointer().data()
 
     def flags(self, index):
         if not index.isValid():

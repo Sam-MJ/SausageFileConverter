@@ -14,6 +14,36 @@ from dataclasses import dataclass
 import utils
 import exceptions
 from metadata_v2 import Metadata_Assembler
+from file_tree import TreeModel
+
+
+class ViewWorker(QtCore.QObject):
+    return_list_of_files_for_TreeModel = QtCore.Signal(list)
+
+    @QtCore.Slot(list, Path)
+    def get_files_and_find_variations(self, root_directory):
+        """long running task from mainwindow widget. get files, tokenize and return a flat file of all the variations to be put into the tree view"""
+        self.audio_files, self.non_audio_files = utils.get_files(
+            Path(root_directory), True
+        )
+        self.ctrl["files_scanned"] = len(self.audio_files)
+
+        tokenized_files = utils.file_tokenization(self.audio_files)
+
+        files_with_variations = utils.find_files_with_variations(tokenized_files)
+
+        # flatten to put into Tree Model
+        flat = []
+        for listoflist in files_with_variations:
+            for lst in listoflist:
+                flat.append(lst)
+
+        self.return_list_of_files_for_TreeModel.emit(flat)
+
+    def __init__(self, ctrl) -> None:
+        super().__init__(parent=None)
+        self.ctrl = ctrl
+        self.ctrl["files_scanned"] = 0
 
 
 class Worker(QtCore.QObject):

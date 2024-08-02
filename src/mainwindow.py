@@ -1,9 +1,8 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 from pathlib import Path
 
-from worker import Worker
+from worker import Worker, ViewWorker
 from telem import Telem
-from utils import get_files, file_tokenization, find_files_with_variations
 from file_tree import TreeModel, FilterProxyModel
 
 import sys
@@ -57,6 +56,9 @@ class MainWidget(QtWidgets.QWidget):
     )
     # input folder, output folder, silence duration, maximum duration, copy files, folders in folder, view_filtered_list, append tag, audio_files, non_audio_files.
 
+    # Send files and path to setup TreeModel
+    send_dir_to_process_files = QtCore.Signal(Path)
+
     # progress bar input slots and settings.
     @QtCore.Slot(int, str)
     def number_of_files(self, filenum, progress_text):
@@ -90,6 +92,12 @@ class MainWidget(QtWidgets.QWidget):
         self.logger.verticalScrollBar().setValue(
             self.logger.verticalScrollBar().maximum()
         )
+
+    @QtCore.Slot(list)
+    def receive_files_to_make_TreeModel(self, files_list):
+        self.model = TreeModel(files_list, Path(self.inputfolder_input.text()))
+        self.proxy_model.setSourceModel(self.model)
+        self.tree_view.setModel(self.proxy_model)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -212,12 +220,18 @@ class MainWidget(QtWidgets.QWidget):
         self.telem = Telem(self.ctrl)
         self.telem_thread = QtCore.QThread()
 
+        self.view_worker = ViewWorker(self.ctrl)
+        self.view_thread = QtCore.QThread()
+
         # move to thread and start
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
 
         self.telem.moveToThread(self.telem_thread)
         self.telem_thread.start()
+
+        self.view_worker.moveToThread(self.view_thread)
+        self.view_thread.start()
 
         # setup signal and slot
         self.submit_signal.connect(self.worker.all_inputs)
@@ -226,6 +240,13 @@ class MainWidget(QtWidgets.QWidget):
         self.worker.logger.connect(self.update_logger)
         # self.worker.processed.connect(self.telem.on_process)
         self.worker.progress.connect(self.telem.on_progress)
+
+        self.send_dir_to_process_files.connect(
+            self.view_worker.get_files_and_find_variations
+        )
+        self.view_worker.return_list_of_files_for_TreeModel.connect(
+            self.receive_files_to_make_TreeModel
+        )
 
         # add Signals to Buttons
         self.inputfolder_button.clicked.connect(self.select_in_folder)
@@ -250,25 +271,8 @@ class MainWidget(QtWidgets.QWidget):
         if folder:
             self.inputfolder_input.setText(folder)
 
-            self.audio_files, self.non_audio_files = get_files(
-                Path(folder), self.foldersinfolders_checkbox.isChecked()
-            )
-            self.ctrl["files_scanned"] = len(self.audio_files)
-
-            tokenized_files = file_tokenization(self.audio_files)
-
-            files_with_variations = find_files_with_variations(tokenized_files)
-
-            # flatten to put into Tree Model
-            flat = []
-            for listoflist in files_with_variations:
-                for lst in listoflist:
-                    flat.append(lst)
-
-            self.model = TreeModel(flat, Path(folder))
-            self.proxy_model.setSourceModel(self.model)
-
-            self.tree_view.setModel(self.proxy_model)
+            # long running task so send to ViewWorker to get files, process them and return as a list.
+            self.send_dir_to_process_files.emit(Path(folder))
 
         if not self.outputfolder_input.text():
             self.outputfolder_input.setPlaceholderText(

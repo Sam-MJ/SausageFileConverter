@@ -77,7 +77,7 @@ def file_tokenization(file_names: list[Path]) -> dict:
 # files to process
 
 
-def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
+def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
     """Find which files have variations and return the file paths in a list of lists"""
     # convert dict into K,V list of lists.
     file_pairs = list(path_and_tokens_by_name.items())
@@ -155,7 +155,9 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list:
 # files to copy
 
 
-def find_files_without_variations(correct_duration_list: list, file_names: list):
+def find_files_without_variations(
+    correct_duration_list: list[list[Path]], file_names: list[Path]
+):
     """Find files without variations by taking list of list of correct_duration_list and comparing them with original file list."""
 
     files_without_vars = []
