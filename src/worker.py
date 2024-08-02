@@ -18,7 +18,9 @@ from file_tree import TreeModel
 
 
 class ViewWorker(QtCore.QObject):
-    return_list_of_files_for_TreeModel = QtCore.Signal(list)
+    return_list_of_files_for_TreeModel = QtCore.Signal(
+        list, list, list
+    )  # flattened list of variations, audio files, non audio files
 
     @QtCore.Slot(list, Path)
     def get_files_and_find_variations(self, root_directory):
@@ -31,12 +33,14 @@ class ViewWorker(QtCore.QObject):
         files_with_variations = utils.find_files_with_variations(tokenized_files)
 
         # flatten to put into Tree Model
-        flat = []
+        flat_list_of_variations = []
         for listoflist in files_with_variations:
             for lst in listoflist:
-                flat.append(lst)
+                flat_list_of_variations.append(lst)
 
-        self.return_list_of_files_for_TreeModel.emit(flat)
+        self.return_list_of_files_for_TreeModel.emit(
+            flat_list_of_variations, self.audio_files, self.non_audio_files
+        )
 
     def __init__(self, ctrl) -> None:
         super().__init__(parent=None)
@@ -65,7 +69,6 @@ class Worker(QtCore.QObject):
         silenceduration_input,
         maxduration_input,
         copybool,
-        foldersinfolders,
         view_filtered_list,
         append_tag,
         audio_files,
@@ -76,7 +79,6 @@ class Worker(QtCore.QObject):
         self.silence_duration = silenceduration_input
         self.max_duration = maxduration_input
         self.copybool = copybool
-        self.foldersinfolders = foldersinfolders
         self.view_filtered_list = view_filtered_list
         self.append_tag = append_tag
         self.audio_files = audio_files

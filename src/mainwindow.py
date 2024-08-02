@@ -91,17 +91,21 @@ class MainWidget(QtWidgets.QWidget):
             self.logger.verticalScrollBar().maximum()
         )
 
-    @QtCore.Slot(list)
-    def receive_files_to_make_TreeModel(self, files_list):
+    @QtCore.Slot(list, list, list)
+    def receive_files_to_make_TreeModel(self, files_list, audio_files, non_audio_files):
+        self.audio_files = audio_files
+        self.non_audio_files = non_audio_files
+
         self.model = TreeModel(files_list, Path(self.inputfolder_input.text()))
         self.proxy_model.setSourceModel(self.model)
         self.tree_view.setModel(self.proxy_model)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
+        # set defaults
+        self.audio_files = None
+        self.non_audio_files = None
         self.ctrl = {"break": False, "files_created": 0}
-
         self.model = TreeModel([], None)
         self.proxy_model = FilterProxyModel()
 
