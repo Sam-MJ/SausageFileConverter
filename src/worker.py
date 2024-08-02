@@ -23,9 +23,7 @@ class ViewWorker(QtCore.QObject):
     @QtCore.Slot(list, Path)
     def get_files_and_find_variations(self, root_directory):
         """long running task from mainwindow widget. get files, tokenize and return a flat file of all the variations to be put into the tree view"""
-        self.audio_files, self.non_audio_files = utils.get_files(
-            Path(root_directory), True
-        )
+        self.audio_files, self.non_audio_files = utils.get_files(Path(root_directory))
         self.ctrl["files_scanned"] = len(self.audio_files)
 
         tokenized_files = utils.file_tokenization(self.audio_files)

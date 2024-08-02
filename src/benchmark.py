@@ -1,19 +1,30 @@
 from pathlib import Path
+import natsort
 import re
 import math
-import natsort
+import string
 
-# from src import exceptions
-
-from pprint import pprint
+from time import perf_counter
 
 
+def timer(func):
+    def f(*args, **kwargs):
+        before = perf_counter()
+        return_value = func(*args, **kwargs)
+        after = perf_counter()
+        print(f"{func.__name__}: time elapsed: {after-before}")
+        return return_value
+
+    return f
+
+
+@timer
 def get_files(in_folder_path: Path) -> tuple[list, list]:
     """Get files with audio file suffixes from folder directory"""
     audio_file_names = []
     non_audio_file_names = []
 
-    file_paths = in_folder_path.rglob("*")  # .iterdir() - only one folder
+    file_paths = in_folder_path.rglob("*")
 
     # wav only for now, change == types to 'in types'
     """ types = (
@@ -27,7 +38,7 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     types = ".wav"
 
     for file in file_paths:
-        # if True, you cannot have a folder in non_audio_file_names
+
         if file.is_dir():
             continue
 
@@ -42,6 +53,7 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     return (audio_file_names, non_audio_file_names)
 
 
+@timer
 def file_tokenization(file_names: list[Path]) -> dict:
     """Split file name into individual words and remove digits, punctuation etc"""
     path_and_tokens = {}  # path and tokens value with numbers removed
@@ -60,9 +72,7 @@ def file_tokenization(file_names: list[Path]) -> dict:
     return path_and_tokens
 
 
-# files to process
-
-
+@timer
 def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
     """Find which files have variations and return the file paths in a list of lists"""
     # convert dict into K,V list of lists.
@@ -138,59 +148,7 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
     return files_with_variations
 
 
-# files to copy
-
-
-def find_files_without_variations(
-    correct_duration_list: list[list[Path]], file_names: list[Path]
-):
-    """Find files without variations by taking list of list of correct_duration_list and comparing them with original file list."""
-
-    files_without_vars = []
-    files_with_vars = []  # flat list
-
-    # flatten files_with_variations
-    for files in correct_duration_list:
-        files_with_vars.extend(files)
-
-    for file in file_names:
-        if file not in files_with_vars:
-            files_without_vars.append(file)
-
-    return files_without_vars
-
-
-def create_output_path(
-    input_file: Path, input_folder: Path, output_folder: Path
-) -> Path:
-    """create output path by taking filename relative to input and joining it to the output folder path"""
-    rel = input_file.relative_to(input_folder)
-    file_output = output_folder.joinpath(rel)
-
-    return file_output
-
-
-def create_parent_folders(file_path: Path):
-    """check if a path needs folders created and if so, create them"""
-    parent_folders = file_path.parent
-    # if the directories don't exist, create them
-    Path(parent_folders).mkdir(parents=True, exist_ok=True)
-
-
-def add_end_tag_to_filename(name_path: Path, tag: str):
-    """Add a given tag to the end of the file name"""
-    file_name = name_path.stem
-    extension = name_path.suffix
-    new_name = file_name + tag + extension
-    parts = name_path.parent
-
-    return parts.joinpath(new_name)
-
-
-def create_default_file_path(input_path: Path):
-    input_path.name
-
-    suffix = "_sausage"
-    new_name = input_path.name + suffix
-
-    return input_path.parent.joinpath(new_name)
+in_folder = Path(r"A:/AUDIO STUFF")
+af, nf = get_files(in_folder)
+tok = file_tokenization(af)
+var = find_files_with_variations(tok)

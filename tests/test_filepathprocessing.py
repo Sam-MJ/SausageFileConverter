@@ -31,8 +31,7 @@ def create_temp(tmp_path):
 
 def test_get_files_folders_in_folders_true(tmp_path):
     create_temp(tmp_path)
-    foldersinfolders = True
-    audio_files, non_audio_files = utils.get_files(tmp_path, foldersinfolders)
+    audio_files, non_audio_files = utils.get_files(tmp_path)
     assert audio_files == [
         Path(f"{tmp_path}/abc_01.wav"),
         Path(f"{tmp_path}/abc_02.wav"),
@@ -46,30 +45,9 @@ def test_get_files_folders_in_folders_true(tmp_path):
     assert Path(f"{tmp_path}/mydir/") not in non_audio_files
 
 
-def test_get_files_folders_in_folders_false(tmp_path):
-    create_temp(tmp_path)
-    foldersinfolders = False
-    audio_files, non_audio_files = utils.get_files(tmp_path, foldersinfolders)
-    assert audio_files == [
-        Path(f"{tmp_path}/abc_01.wav"),
-        Path(f"{tmp_path}/abc_02.wav"),
-        Path(f"{tmp_path}/abc_3.wav"),
-        Path(f"{tmp_path}/abc_5.wav"),
-        Path(f"{tmp_path}/abc_11.wav"),
-    ]
-
-    assert [
-        Path(f"{tmp_path}/mydir/01monty.wav"),
-        Path(f"{tmp_path}/mydir/02monty.wav"),
-    ] not in audio_files
-
-    assert Path(f"{tmp_path}/mydir/") in non_audio_files
-
-
 def test_file_tokenization(tmp_path):
     create_temp(tmp_path)
-    foldersinfolders = True
-    audio_files, non_audio_files = utils.get_files(tmp_path, foldersinfolders)
+    audio_files, non_audio_files = utils.get_files(tmp_path)
     tokens = utils.file_tokenization(audio_files)
     assert tokens == {
         Path(f"{tmp_path}/abc_01.wav"): [

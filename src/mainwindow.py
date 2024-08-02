@@ -51,10 +51,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 class MainWidget(QtWidgets.QWidget):
 
-    submit_signal = QtCore.Signal(
-        str, str, float, float, bool, bool, list, str, list, list
-    )
-    # input folder, output folder, silence duration, maximum duration, copy files, folders in folder, view_filtered_list, append tag, audio_files, non_audio_files.
+    submit_signal = QtCore.Signal(str, str, float, float, bool, list, str, list, list)
+    # input folder, output folder, silence duration, maximum duration, copy files, view_filtered_list, append tag, audio_files, non_audio_files.
 
     # Send files and path to setup TreeModel
     send_dir_to_process_files = QtCore.Signal(Path)
@@ -150,11 +148,6 @@ class MainWidget(QtWidgets.QWidget):
         self.copyfiles_checkbox = QtWidgets.QCheckBox(
             "Copy unprocessed files to output folder", self
         )
-        self.foldersinfolders_checkbox = QtWidgets.QCheckBox(
-            "Process folders in folders", self
-        )
-        # default checked
-        self.foldersinfolders_checkbox.setChecked(True)
 
         # add widgets to layouts
         layout = QtWidgets.QVBoxLayout()  # vertical layout
@@ -164,7 +157,6 @@ class MainWidget(QtWidgets.QWidget):
         input_options_layout.addWidget(self.inputfolder_label, 0, 0)
         input_options_layout.addWidget(self.inputfolder_input, 0, 1)
         input_options_layout.addWidget(self.inputfolder_button, 0, 2)
-        input_options_layout.addWidget(self.foldersinfolders_checkbox, 1, 0)
 
         # exclusion field
         filter_files_layout = QtWidgets.QGridLayout()
@@ -362,7 +354,6 @@ class MainWidget(QtWidgets.QWidget):
                 md = 0
 
             copybool = self.copyfiles_checkbox.isChecked()
-            foldersinfolders = self.foldersinfolders_checkbox.isChecked()
             # send to Worker object
             self.submit_signal.emit(
                 i,
@@ -370,7 +361,6 @@ class MainWidget(QtWidgets.QWidget):
                 sd,
                 md,
                 copybool,
-                foldersinfolders,
                 view_filtered_list,
                 append_tag,
                 self.audio_files,
