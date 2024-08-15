@@ -1,6 +1,6 @@
 *.py[cod]
 *__pycache__/
 *.env
+*.venv
 build
-
 tests/big_test_e2e.py
