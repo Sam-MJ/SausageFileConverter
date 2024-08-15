@@ -3,11 +3,14 @@ certifi==2024.6.2
 cffi==1.16.0
 charset-normalizer==3.3.2
 Cython==3.0.10
+exceptiongroup==1.2.1
 idna==3.7
+iniconfig==2.0.0
 macholib==1.16.3
 natsort==8.4.0
 numpy==1.24.4
 packaging==24.1
+pluggy==1.5.0
 pycparser==2.22
 pyinstaller==6.8.0
 pyinstaller-hooks-contrib==2024.7
@@ -16,8 +19,11 @@ PyQt6-Qt6==6.7.1
 PyQt6-sip==13.6.0
 PySide6==6.2.0
 pytaglib==3.0.0
+pytest==8.2.2
 python-dotenv==1.0.1
 requests==2.32.3
 shiboken6==6.2.0
 soundfile==0.12.1
+soxr==0.4.0
+tomli==2.0.1
 urllib3==2.2.2
