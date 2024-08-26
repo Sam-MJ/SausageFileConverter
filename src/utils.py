@@ -27,9 +27,13 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     types = ".wav"
 
     for file in file_paths:
-        # if True, you cannot have a folder in non_audio_file_names
+        """ COMMENTED OUT BECAUSE IT IS A LOT FASTER,
+        THIS MAY CAUSE AN ERROR IF SOME MUPPET HAS A DIRECTORY ENDING IN .WAV,
+        YES THAT ACTUALLY HAPPENED BUT THEY DESERVE IT.
+        THIS IS LEFT HERE IN CASE IT COMES BACK TO BITE ME.
+
         if file.is_dir():
-            continue
+            continue """
 
         if file.suffix.lower() == types and file.name[0:2] != "._":
             # On windows, MAC OSX has hidden temp Wav files that start with ._ They don't have any useable content.
@@ -42,19 +46,23 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     return (audio_file_names, non_audio_file_names)
 
 
-def file_tokenization(file_names: list[Path]) -> dict:
+def split_paths_to_tokens(file_names: list[Path]) -> dict:
     """Split file name into individual words and remove digits, punctuation etc"""
     path_and_tokens = {}  # path and tokens value with numbers removed
 
     for file_path in file_names:
-        # when view filtered files go through this, there can be directories.
+
+        """ COMMENTED OUT BECAUSE IT IS A LOT FASTER,
+        THE ONLY EDGE CASE WHERE THIS MAY CAUSE ISSUES IS WHEN FOLDERS HAVE THE SAME NAME AS TO BE VARIATIONS OF EACHOTHER
+        OR ARE THE SAME NAME AS FILES WITH VARIATIONS WHILE HAVING THE SAME PARENT FOLDER.
+
         if file_path.is_dir():
-            continue
+            continue """
 
         name = file_path.stem
 
         tokens = re.findall(r"[a-zA-Z]+|\d+", name)  # words and digits
-        # tokens = re.findall(r"[a-zA-Z]+", name)  # just words
+
         path_and_tokens[file_path] = tokens
 
     return path_and_tokens

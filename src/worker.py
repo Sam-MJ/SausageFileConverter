@@ -28,7 +28,7 @@ class ViewWorker(QtCore.QObject):
         self.audio_files, self.non_audio_files = utils.get_files(Path(root_directory))
         self.ctrl["files_scanned"] = len(self.audio_files)
 
-        tokenized_files = utils.file_tokenization(self.audio_files)
+        tokenized_files = utils.split_paths_to_tokens(self.audio_files)
 
         files_with_variations = utils.find_files_with_variations(tokenized_files)
 
@@ -88,7 +88,7 @@ class Worker(QtCore.QObject):
         if self.input_folder == self.output_folder:
             self.output_folder = utils.create_default_file_path(self.output_folder)
 
-        tokenized = utils.file_tokenization(view_filtered_list)
+        tokenized = utils.split_paths_to_tokens(view_filtered_list)
         files_with_variations = utils.find_files_with_variations(tokenized)
 
         # sort durations
