@@ -14,4 +14,8 @@ Converting files in this way aids sound designers in:
 * Adding old libraries - which used to favour single files with variations
 * Adding designed game assets and layers back into their library for use in future projects
 
+## Video Walkthrough
+
+https://www.youtube.com/embed/vRbyTHxy2as?si=4a-1SYonQALH_op8
+
 ## This repo is only open so I can show recruiters, If you would like to use this tool please contact me for a license!
