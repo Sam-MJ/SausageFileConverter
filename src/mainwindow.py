@@ -153,6 +153,10 @@ class MainWidget(QtWidgets.QWidget):
             "Copy unprocessed files to output folder", self
         )
 
+        """ self.loading_screen = QtWidgets.QDialog()
+        self.loading_screen.
+
+ """
         # add widgets to layouts
         layout = QtWidgets.QVBoxLayout()  # vertical layout
 
