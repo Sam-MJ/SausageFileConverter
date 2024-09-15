@@ -37,16 +37,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.10.15
+    - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
-        python-version: 3.10.15
+        python-version: 3.12
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip install setuptools
         pip install wheel
-        pip install -r requirements_mac.txt
+        pip install -r requirements.txt
     - name: Build with pyinstaller for MacOS_ARM64
       run: >
         Make mac &&
