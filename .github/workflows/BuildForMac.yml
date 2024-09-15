@@ -56,6 +56,8 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: release_url
+    - name: List Downloaded Files #debug
+      run: ls -la release_url
     - name: Get Release File Name & Upload URL
       id: get_release_info
       shell: bash
