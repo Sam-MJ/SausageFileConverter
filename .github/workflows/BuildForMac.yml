@@ -23,6 +23,8 @@ jobs:
       with:
         name: release_url
         path: release_url.txt
+    - name: List Files
+      run: ls -la
 
   build:
     env:
