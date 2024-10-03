@@ -47,6 +47,12 @@ class ViewWorker(QtCore.QObject):
         self.ctrl = ctrl
         self.ctrl["files_scanned"] = 0
 
+    def show_loading_message(self):
+        self.msg.show()
+
+    def close_loading_message(self):
+        self.msg.close()
+
 
 class Worker(QtCore.QObject):
 

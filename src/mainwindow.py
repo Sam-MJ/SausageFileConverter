@@ -61,7 +61,7 @@ class MainWidget(QtWidgets.QWidget):
     @QtCore.Slot(int, str)
     def number_of_files(self, filenum, progress_text):
         self.progress = QtWidgets.QProgressDialog(
-            cancelButtonText="Cancel", minimum=0, maximum=filenum
+            parent=self, cancelButtonText="Cancel", minimum=0, maximum=filenum
         )
         self.progress.setLabelText(progress_text)
         self.progress.setWindowTitle("Processing...")
@@ -93,12 +93,14 @@ class MainWidget(QtWidgets.QWidget):
 
     @QtCore.Slot(list, list, list)
     def receive_files_to_make_TreeModel(self, files_list, audio_files, non_audio_files):
+        """Get audio files and non-audio files from ViewWorker, create model from them and close loading message box"""
         self.audio_files = audio_files
         self.non_audio_files = non_audio_files
 
         self.model = TreeModel(files_list, Path(self.inputfolder_input.text()))
         self.proxy_model.setSourceModel(self.model)
         self.tree_view.setModel(self.proxy_model)
+        self.loading.accept()
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -139,6 +141,18 @@ class MainWidget(QtWidgets.QWidget):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
 
+        # loading message
+        self.loading = QtWidgets.QMessageBox(self)
+        self.loading.setWindowTitle("Loading")
+        self.loading.setText(
+            "<div style='text-align: center;'>"
+            "Please Wait:<br><br>"
+            "Files are being sorted to show only variations"
+            "</div>"
+        )
+        self.loading.setStandardButtons(QtWidgets.QMessageBox.NoButton)
+        self.loading.setStyleSheet("QMessageBox { border: none; }")
+
         self.inputfolder_input = QtWidgets.QLineEdit()
         self.outputfolder_input = QtWidgets.QLineEdit()
         self.exclusionfield_input = QtWidgets.QLineEdit()
@@ -153,10 +167,6 @@ class MainWidget(QtWidgets.QWidget):
             "Copy unprocessed files to output folder", self
         )
 
-        """ self.loading_screen = QtWidgets.QDialog()
-        self.loading_screen.
-
- """
         # add widgets to layouts
         layout = QtWidgets.QVBoxLayout()  # vertical layout
 
@@ -273,6 +283,8 @@ class MainWidget(QtWidgets.QWidget):
 
             # long running task so send to ViewWorker to get files, process them and return as a list.
             self.send_dir_to_process_files.emit(Path(folder))
+            # Show Loading MessageBox
+            self.loading.show()
 
         if not self.outputfolder_input.text():
             self.outputfolder_input.setPlaceholderText(
