@@ -100,20 +100,22 @@ class Worker(QtCore.QObject):
         # sort durations
         correct_duration_list = self.remove_too_short_files(files_with_variations)
 
+        # sort files to be copied, this is done before appending so that failed files can be added to it.
+        if copybool is True:
+            self.files_without_variations = utils.find_files_without_variations(
+                correct_duration_list, audio_files
+            )
+
+            self.files_without_variations.extend(self.non_audio_files)
+
         # append
         if len(correct_duration_list) > 0:
             self.file_append_pool(correct_duration_list)
 
         # copy to out
         if copybool is True:
-            files_without_variations = utils.find_files_without_variations(
-                correct_duration_list, audio_files
-            )
-
-            files_without_variations.extend(self.non_audio_files)
-
-            if len(files_without_variations) > 0:
-                self.file_copy_pool(files_without_variations)
+            if len(self.files_without_variations) > 0:
+                self.file_copy_pool(self.files_without_variations)
 
     def remove_too_short_files(self, files_with_variations: list[list[Path]]) -> list:
         """Remove files that are too short from the files_with_variations list of lists"""
@@ -180,19 +182,27 @@ class Worker(QtCore.QObject):
         original_file_name = single_variation_list[0]
 
         try:
-            new_file_name = self.file_append(
+            new_filename_path = self.file_append(
                 single_variation_list,
                 self.silence_duration,
                 self.input_folder,
                 self.output_folder,
                 self.append_tag,
             )
+            self.write_metadata(original_file_name, new_filename_path)
 
-            self.write_metadata(original_file_name, new_file_name)
+        # if writing file error
         except (
             soundfile.LibsndfileError,
             exceptions.ChannelCountError,
             exceptions.BitDepthError,
+        ) as e:
+            print(f"{e}: file: {original_file_name}")
+            self.logger.emit("Write", False, str(original_file_name), str(e))
+            self.files_without_variations.extend(single_variation_list)
+
+        # if write metadata file error
+        except (
             exceptions.InvalidRIFFFileException,
             exceptions.FormatChunkError,
             exceptions.InvalidWavFileException,
@@ -203,11 +213,21 @@ class Worker(QtCore.QObject):
         ) as e:
             print(f"{e}: file: {original_file_name}")
             self.logger.emit("Write", False, str(original_file_name), str(e))
+            self.files_without_variations.extend(single_variation_list)
+            # delete file that was created by successful file write
+            Path.unlink(new_filename_path)
 
         except Exception as e:
             print(f"Unexpected Error: {e}: file {original_file_name}")
             print(traceback.print_exc())
             self.logger.emit("Write", False, str(original_file_name), e)
+            self.files_without_variations.extend(single_variation_list)
+
+        else:
+            print("Write: ", str(new_filename_path))
+            self.logger.emit(
+                "Write", True, str(original_file_name), str(new_filename_path)
+            )
 
     def write_metadata(self, original_file_name: Path, new_file_name: Path) -> None:
         """Write the metadata from the first file in the list (of the un-appended files) to the new sausage file"""
@@ -376,8 +396,5 @@ class Worker(QtCore.QObject):
 
         data = numpy.concatenate(audio_chunks)
         soundfile.write(new_filename_path, data, highest_sample_rate, subtype=subtype)
-
-        print("Write: ", str(new_filename_path))
-        self.logger.emit("Write", True, str(file_name_path), str(new_filename_path))
 
         return new_filename_path
