@@ -199,7 +199,8 @@ class Worker(QtCore.QObject):
         ) as e:
             print(f"{e}: file: {original_file_name}")
             self.logger.emit("Write", False, str(original_file_name), str(e))
-            self.files_without_variations.extend(single_variation_list)
+            if self.copybool:
+                self.files_without_variations.extend(single_variation_list)
 
         # if write metadata file error
         except (
@@ -213,7 +214,8 @@ class Worker(QtCore.QObject):
         ) as e:
             print(f"{e}: file: {original_file_name}")
             self.logger.emit("Write", False, str(original_file_name), str(e))
-            self.files_without_variations.extend(single_variation_list)
+            if self.copybool:
+                self.files_without_variations.extend(single_variation_list)
             # delete file that was created by successful file write
             Path.unlink(new_filename_path)
 
@@ -221,7 +223,8 @@ class Worker(QtCore.QObject):
             print(f"Unexpected Error: {e}: file {original_file_name}")
             print(traceback.print_exc())
             self.logger.emit("Write", False, str(original_file_name), e)
-            self.files_without_variations.extend(single_variation_list)
+            if self.copybool:
+                self.files_without_variations.extend(single_variation_list)
 
         else:
             print("Write: ", str(new_filename_path))
@@ -259,7 +262,6 @@ class Worker(QtCore.QObject):
 
             # When all are done, send the last percent to the update bar
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
-            # self.processed.emit(True)
             self.progress.emit(len(files_with_correct_size_variations))
 
     def file_copy_pool(self, files_without_variations):
