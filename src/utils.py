@@ -27,13 +27,13 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     types = ".wav"
 
     for file in file_paths:
-        """ COMMENTED OUT BECAUSE IT IS A LOT FASTER,
+        """COMMENTED OUT BECAUSE IT IS A LOT FASTER,
         THIS MAY CAUSE AN ERROR IF SOME MUPPET HAS A DIRECTORY ENDING IN .WAV,
         YES THAT ACTUALLY HAPPENED BUT THEY DESERVE IT.
         THIS IS LEFT HERE IN CASE IT COMES BACK TO BITE ME.
 
         if file.is_dir():
-            continue """
+            continue"""
 
         if file.suffix.lower() == types and file.name[0:2] != "._":
             # On windows, MAC OSX has hidden temp Wav files that start with ._ They don't have any useable content.
@@ -52,16 +52,27 @@ def split_paths_to_tokens(file_names: list[Path]) -> dict:
 
     for file_path in file_names:
 
-        """ COMMENTED OUT BECAUSE IT IS A LOT FASTER,
+        """COMMENTED OUT BECAUSE IT IS A LOT FASTER,
         THE ONLY EDGE CASE WHERE THIS MAY CAUSE ISSUES IS WHEN FOLDERS HAVE THE SAME NAME AS TO BE VARIATIONS OF EACHOTHER
         OR ARE THE SAME NAME AS FILES WITH VARIATIONS WHILE HAVING THE SAME PARENT FOLDER.
 
         if file_path.is_dir():
-            continue """
+            continue"""
 
         name = file_path.stem
 
-        tokens = re.findall(r"[a-zA-Z]+|\d+", name)  # words and digits
+        """This regex will match all digits with a distance after it i.e cm/m/ft.
+        One problem is any names that have a number followed by a word with cm/m/ft will also be caught in it
+        so 12monty will be '12m' 'onty' and 13monty would be '13m' 'onty' and not be counted as variations.
+        This may cause a few errors but is a wider edge case than file names with distances in them.
+        """
+        digit_and_distancechars = r"(?:\d+(?:ft|FT|Ft|m|M|cm|CM|Cm))"
+        all_chars = r"[a-zA-Z]+"
+        all_digits = r"\d+"
+
+        tokens = re.findall(
+            rf"{digit_and_distancechars}|{all_chars}|{all_digits}", name
+        )
 
         path_and_tokens[file_path] = tokens
 
@@ -95,28 +106,26 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
         word2_token1,[word2_token2], word2_token3
         are tokens in [] the same?
         """
-        diff_index = 0
+
+        diff_index = -1
+
         for i in range(len(word1_tokens)):
             if word1_tokens[i] != word2_tokens[i]:
                 # if they aren't both digits, return False
                 if not (word1_tokens[i].isdigit() and word2_tokens[i].isdigit()):
                     return False
 
-                # if both are the same or within 1 of eachother
-                if word1_tokens[i] == word2_tokens[i] or math.isclose(
-                    int(word1_tokens[i]), int(word2_tokens[i]), rel_tol=1
-                ):
-                    # if this is the first difference, set the index where differences are allowed.
-                    if diff_index == 0:
-                        diff_index = i
+                # if this is the first difference, set the index where differences are allowed.
+                if diff_index == -1:
+                    diff_index = i
 
-                    # if the difference is in the allowed index, continue
-                    if diff_index == i:
-                        continue
+                # if the difference is in the allowed index, continue
+                if diff_index == i:
+                    continue
 
-                    # if it's in a non-valid index, reset and return false
-                    diff_index = 0
-                    return False
+                # if it's in a non-valid index, return false
+                return False
+
         return True
 
     files_with_variations = []
@@ -129,6 +138,7 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
         previous_file_path = previous_file[0]
 
         if word_match(current_file, previous_file):
+
             if previous_file_path not in matched_files:
                 matched_files.append(previous_file_path)
 

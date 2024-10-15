@@ -12,8 +12,8 @@ def create_temp(tmp_path):
         "abc_5.wav",
         "abc_11.wav",
         "abc_3.wav",
-        "mydir/01monty.wav",
-        "mydir/02monty.wav",
+        "mydir/monty_1m_01.wav",
+        "mydir/monty_1m_02.wav",
         "podcastwith10views.flac",
     )
 
@@ -38,8 +38,8 @@ def test_get_files_folders_in_folders_true(tmp_path):
         Path(f"{tmp_path}/abc_3.wav"),
         Path(f"{tmp_path}/abc_5.wav"),
         Path(f"{tmp_path}/abc_11.wav"),
-        Path(f"{tmp_path}/mydir/01monty.wav"),
-        Path(f"{tmp_path}/mydir/02monty.wav"),
+        Path(f"{tmp_path}/mydir/monty_1m_01.wav"),
+        Path(f"{tmp_path}/mydir/monty_1m_02.wav"),
     ]
 
 
@@ -59,8 +59,26 @@ def test_file_tokenization(tmp_path):
         Path(f"{tmp_path}/abc_3.wav"): ["abc", "3"],
         Path(f"{tmp_path}/abc_5.wav"): ["abc", "5"],
         Path(f"{tmp_path}/abc_11.wav"): ["abc", "11"],
-        Path(f"{tmp_path}/mydir/01monty.wav"): ["01", "monty"],
-        Path(f"{tmp_path}/mydir/02monty.wav"): ["02", "monty"],
+        # new regex breaks this, but it's less likely to have a variation like that than a distance.
+        # Path(f"{tmp_path}/mydir/01monty.wav"): ["01", "monty"],
+        # Path(f"{tmp_path}/mydir/02monty.wav"): ["02", "monty"],
+        Path(f"{tmp_path}/mydir/monty_1m_01.wav"): ["monty", "1m", "01"],
+        Path(f"{tmp_path}/mydir/monty_1m_02.wav"): ["monty", "1m", "02"],
+    }
+
+    # distance tokens
+    data3 = {
+        Path("A:/made_up/gunshot 5m 1"): ["gunshot", "5m", "1"],
+        Path("A:/made_up/gunshot 5m 2"): ["gunshot", "5m", "2"],
+        Path("A:/made_up/gunshot 10m 1"): ["gunshot", "10m", "1"],
+        Path("A:/made_up/gunshot 10m 2"): ["gunshot", "10m", "2"],
+    }
+    tokens = utils.split_paths_to_tokens(data3)
+    assert tokens == {
+        Path("A:/made_up/gunshot 5m 1"): ["gunshot", "5m", "1"],
+        Path("A:/made_up/gunshot 5m 2"): ["gunshot", "5m", "2"],
+        Path("A:/made_up/gunshot 10m 1"): ["gunshot", "10m", "1"],
+        Path("A:/made_up/gunshot 10m 2"): ["gunshot", "10m", "2"],
     }
 
 
@@ -165,6 +183,80 @@ def test_files_with_variations():
     output = utils.find_files_with_variations(data)
 
     assert expected_output == output
+
+    data = {
+        Path("D:/andrewscott_01_1.wav"): ["andrewscott", "01", "1"],
+        Path("D:/andrewscott_01_2.wav"): ["andrewscott", "01", "2"],
+        Path("D:/andrewscott_01_3.wav"): ["andrewscott", "01", "3"],
+        Path("D:/andrewscott_02_1.wav"): ["andrewscott", "02", "1"],
+        Path("D:/andrewscott_02_2.wav"): ["andrewscott", "02", "2"],
+        Path("D:/andrewscott_06_1.wav"): ["andrewscott", "06", "1"],
+        Path("D:/andrewscott_06_4.wav"): ["andrewscott", "06", "4"],
+    }
+
+    output = utils.find_files_with_variations(data)
+
+    expected_output = [
+        [
+            Path("D:/andrewscott_01_1.wav"),
+            Path("D:/andrewscott_01_2.wav"),
+            Path("D:/andrewscott_01_3.wav"),
+        ],
+        [Path("D:/andrewscott_02_1.wav"), Path("D:/andrewscott_02_2.wav")],
+        [Path("D:/andrewscott_06_1.wav"), Path("D:/andrewscott_06_4.wav")],
+    ]
+
+    assert output == expected_output
+
+    print(output)
+    ## test two to remove files that are a digit and a distance i.e. M or ft ##
+
+    data2 = {
+        Path("A:/made_up/waterfall 5m"): ["waterfall", "5m"],
+        Path("A:/made_up/waterfall 15m"): ["waterfall", "15m"],
+        Path("A:/made_up/waterfall 25m"): ["waterfall", "25m"],
+    }
+    output2 = utils.find_files_with_variations(data2)
+    assert output2 == []
+
+    data3 = {
+        Path("A:/made_up/waterfall 5m 1"): ["waterfall", "5m", "1"],
+        Path("A:/made_up/waterfall 5m 3"): ["waterfall", "5m", "3"],
+        Path("A:/made_up/waterfall 5m 4"): ["waterfall", "5m", "4"],
+    }
+    output3 = utils.find_files_with_variations(data3)
+    expected_output = [
+        [
+            Path("A:/made_up/waterfall 5m 1"),
+            Path("A:/made_up/waterfall 5m 3"),
+            Path("A:/made_up/waterfall 5m 4"),
+        ]
+    ]
+    assert output3 == expected_output
+
+    data3 = {
+        Path("A:/made_up/waterfall 5m 1"): ["waterfall", "5m", "1", "02"],
+        Path("A:/made_up/waterfall 15m 3"): ["waterfall", "150m", "3", "04"],
+        Path("A:/made_up/waterfall 25m 4"): ["waterfall", "25000m", "4", "05"],
+    }
+    output3 = utils.find_files_with_variations(data3)
+    assert output3 == []
+
+    data3 = {
+        Path("A:/made_up/gunshot 5m 1"): ["gunshot", "5m", "1"],
+        Path("A:/made_up/gunshot 5m 2"): ["gunshot", "5m", "2"],
+        Path("A:/made_up/gunshot 10m 1"): ["gunshot", "10m", "1"],
+        Path("A:/made_up/gunshot 10m 2"): ["gunshot", "10m", "2"],
+    }
+    output3 = utils.find_files_with_variations(data3)
+    expected_output = [
+        [Path("A:/made_up/gunshot 5m 1"), Path("A:/made_up/gunshot 5m 2")],
+        [
+            Path("A:/made_up/gunshot 10m 1"),
+            Path("A:/made_up/gunshot 10m 2"),
+        ],
+    ]
+    assert output3 == expected_output
 
 
 def test_add_file_tag():

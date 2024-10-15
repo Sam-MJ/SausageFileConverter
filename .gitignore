@@ -4,3 +4,4 @@
 *.venv
 build
 tests/big_test_e2e.py
+dist/
