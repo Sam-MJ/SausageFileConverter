@@ -66,7 +66,7 @@ def split_paths_to_tokens(file_names: list[Path]) -> dict:
         so 12monty will be '12m' 'onty' and 13monty would be '13m' 'onty' and not be counted as variations.
         This may cause a few errors but is a wider edge case than file names with distances in them.
         """
-        digit_and_distancechars = r"(?:\d+(?:ft|FT|Ft|m|M|cm|CM|Cm))"
+        digit_and_distancechars = r"(?:\d+(?:ft|FT|Ft|m|M|cm|CM|Cm)(?=\b|\s|_|-))"
         all_chars = r"[a-zA-Z]+"
         all_digits = r"\d+"
 

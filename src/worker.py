@@ -16,6 +16,9 @@ import exceptions
 from metadata_v2 import Metadata_Assembler
 from file_tree import TreeModel
 
+import mdutils
+import datetime
+
 
 class ViewWorker(QtCore.QObject):
     return_list_of_files_for_TreeModel = QtCore.Signal(
@@ -64,7 +67,6 @@ class Worker(QtCore.QObject):
 
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
-    processed = QtCore.Signal(bool)
     logger = QtCore.Signal(str, bool, str, str)
 
     @QtCore.Slot(str)
@@ -94,6 +96,9 @@ class Worker(QtCore.QObject):
         if self.input_folder == self.output_folder:
             self.output_folder = utils.create_default_file_path(self.output_folder)
 
+        # create a new report each time a folder is selected
+        self.create_md_report()
+
         tokenized = utils.split_paths_to_tokens(view_filtered_list)
         files_with_variations = utils.find_files_with_variations(tokenized)
 
@@ -116,6 +121,16 @@ class Worker(QtCore.QObject):
         if copybool is True:
             if len(self.files_without_variations) > 0:
                 self.file_copy_pool(self.files_without_variations)
+
+    def create_md_report(self):
+        """Create a reports folder and Initialise the creation of a markdown report"""
+        p = Path("reports/")
+        p.mkdir(parents=True, exist_ok=True)
+
+        self.report = mdutils.MdUtils(
+            file_name=f"reports/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}",
+            title="Sausage File Converter Report",
+        )
 
     def remove_too_short_files(self, files_with_variations: list[list[Path]]) -> list:
         """Remove files that are too short from the files_with_variations list of lists"""
@@ -232,6 +247,10 @@ class Worker(QtCore.QObject):
                 "Write", True, str(original_file_name), str(new_filename_path)
             )
 
+            # Write new file name and the single variations that make it up to markdown report
+            path_to_str = [str(p) for p in single_variation_list]
+            self.report.new_list([str(new_filename_path), path_to_str])
+
     def write_metadata(self, original_file_name: Path, new_file_name: Path) -> None:
         """Write the metadata from the first file in the list (of the un-appended files) to the new sausage file"""
         # write metadata chunks to new file
@@ -252,6 +271,7 @@ class Worker(QtCore.QObject):
         self.number_of_files.emit(
             len(files_with_correct_size_variations), "Appending..."
         )
+        self.report.new_header(level=1, title="Converted Files")
 
         with concurrent.futures.ProcessPoolExecutor() as p_executor:  # using a context manager joins, so blocks
             futures = {
@@ -263,6 +283,11 @@ class Worker(QtCore.QObject):
             # When all are done, send the last percent to the update bar
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_with_correct_size_variations))
+
+        # if there is no copying stage, all processing is finished and the report can be generated.
+        # if not it will finish after copying stage.
+        if not self.copybool:
+            self.report.create_md_file()
 
     def file_copy_pool(self, files_without_variations):
         """create multi-thread pool to copy files"""
@@ -281,6 +306,12 @@ class Worker(QtCore.QObject):
             # When all are done, send the last percent to the update bar
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_without_variations))
+
+        # convert to a list of strings and pass to report, then generate report.
+        self.report.new_header(level=1, title="Copied files")
+        path_to_str = [str(p) for p in files_without_variations]
+        self.report.new_list([path_to_str])
+        self.report.create_md_file()
 
     def file_append(
         self,

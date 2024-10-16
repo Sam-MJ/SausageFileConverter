@@ -12,6 +12,8 @@ def create_temp(tmp_path):
         "abc_5.wav",
         "abc_11.wav",
         "abc_3.wav",
+        "mydir/01monty.wav",
+        "mydir/02monty.wav",
         "mydir/monty_1m_01.wav",
         "mydir/monty_1m_02.wav",
         "podcastwith10views.flac",
@@ -38,6 +40,8 @@ def test_get_files_folders_in_folders_true(tmp_path):
         Path(f"{tmp_path}/abc_3.wav"),
         Path(f"{tmp_path}/abc_5.wav"),
         Path(f"{tmp_path}/abc_11.wav"),
+        Path(f"{tmp_path}/mydir/01monty.wav"),
+        Path(f"{tmp_path}/mydir/02monty.wav"),
         Path(f"{tmp_path}/mydir/monty_1m_01.wav"),
         Path(f"{tmp_path}/mydir/monty_1m_02.wav"),
     ]
@@ -60,8 +64,8 @@ def test_file_tokenization(tmp_path):
         Path(f"{tmp_path}/abc_5.wav"): ["abc", "5"],
         Path(f"{tmp_path}/abc_11.wav"): ["abc", "11"],
         # new regex breaks this, but it's less likely to have a variation like that than a distance.
-        # Path(f"{tmp_path}/mydir/01monty.wav"): ["01", "monty"],
-        # Path(f"{tmp_path}/mydir/02monty.wav"): ["02", "monty"],
+        Path(f"{tmp_path}/mydir/01monty.wav"): ["01", "monty"],
+        Path(f"{tmp_path}/mydir/02monty.wav"): ["02", "monty"],
         Path(f"{tmp_path}/mydir/monty_1m_01.wav"): ["monty", "1m", "01"],
         Path(f"{tmp_path}/mydir/monty_1m_02.wav"): ["monty", "1m", "02"],
     }

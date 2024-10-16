@@ -248,7 +248,6 @@ class MainWidget(QtWidgets.QWidget):
         self.worker.number_of_files.connect(self.number_of_files)
         self.worker.progress.connect(self.progress_int)
         self.worker.logger.connect(self.update_logger)
-        # self.worker.processed.connect(self.telem.on_process)
         self.worker.progress.connect(self.telem.on_progress)
 
         self.send_dir_to_process_files.connect(
