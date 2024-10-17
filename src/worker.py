@@ -404,7 +404,9 @@ class Worker(QtCore.QObject):
                 )
 
         # create the output path
-        file_name_path = single_variation_list[0]
+
+        file_name_path = utils.clean_output_name(single_variation_list)
+
         new_filename_path = utils.create_output_path(
             file_name_path, input_folder, output_folder
         )

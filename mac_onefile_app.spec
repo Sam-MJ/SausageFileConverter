@@ -33,7 +33,8 @@ a = Analysis(
     "math",
     "natsort",
     "soxr",
-    "dataclasses"
+    "dataclasses",
+    "mdutils"
 ],
     hookspath=[],
     hooksconfig={},

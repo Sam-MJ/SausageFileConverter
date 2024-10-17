@@ -24,7 +24,7 @@ def test_file_append_different_sample_rates():
     )
 
     # check output
-    output_file = Path(r"tests\files\outputs\test_file_48.wav")
+    output_file = Path(r"tests\files\outputs\test_file.wav")
 
     with sf.SoundFile(output_file, "r") as of:
         samplerate = of.samplerate
@@ -54,7 +54,7 @@ def test_file_append_mono_and_stereo_variations():
     )
 
     # check output
-    output_file = Path(r"tests/files/outputs/channels_test_file_01.wav")
+    output_file = Path(r"tests/files/outputs/channels_test_file.wav")
 
     with sf.SoundFile(output_file, "r") as of:
         audio = of.read()

@@ -8,6 +8,7 @@ idna==3.9
 iniconfig==2.0.0
 natsort==8.4.0
 numpy==2.1.1
+mdutils==1.6.0
 packaging==24.1
 pefile==2024.8.26
 pluggy==1.5.0

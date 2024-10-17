@@ -30,7 +30,8 @@ hiddenimports += [
     "math",
     "natsort",
     "soxr",
-    "dataclasses"
+    "dataclasses",
+    "mdutils"
 ]
 
 
