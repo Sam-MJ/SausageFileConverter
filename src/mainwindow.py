@@ -284,8 +284,7 @@ class MainWidget(QtWidgets.QWidget):
             self.send_dir_to_process_files.emit(Path(folder))
             # Show Loading MessageBox
             self.loading.show()
-
-        if not self.outputfolder_input.text():
+            # Set default output folder path to the same as the input path
             self.outputfolder_input.setPlaceholderText(
                 self.inputfolder_input.text() + "_sausage"
             )
