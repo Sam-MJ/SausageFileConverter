@@ -19,9 +19,9 @@ def test_file_append_different_sample_rates():
     ctrl = {}
     w = worker.Worker(ctrl)
 
-    w.file_append(
-        single_variation_list, silence_duration, input_folder, output_folder, append_tag
-    )
+    reportobj = worker.ReportObject(single_variation_list)
+
+    w.file_append(reportobj, silence_duration, input_folder, output_folder, append_tag)
 
     # check output
     output_file = Path(r"tests\files\outputs\test_file.wav")
@@ -49,9 +49,9 @@ def test_file_append_mono_and_stereo_variations():
     ctrl = {}
     w = worker.Worker(ctrl)
 
-    w.file_append(
-        single_variation_list, silence_duration, input_folder, output_folder, append_tag
-    )
+    reportobj = worker.ReportObject(single_variation_list)
+
+    w.file_append(reportobj, silence_duration, input_folder, output_folder, append_tag)
 
     # check output
     output_file = Path(r"tests/files/outputs/channels_test_file.wav")
@@ -81,9 +81,11 @@ def test_non_audio_or_empty():
     ctrl = {}
     w = worker.Worker(ctrl)
 
+    reportobj = worker.ReportObject(single_variation_list)
+
     with pytest.raises(sf.LibsndfileError):
         w.file_append(
-            single_variation_list,
+            reportobj,
             silence_duration,
             input_folder,
             output_folder,
