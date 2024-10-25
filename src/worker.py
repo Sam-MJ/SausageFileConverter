@@ -18,6 +18,9 @@ from file_tree import TreeModel
 
 import mdutils
 import datetime
+import sys
+import os
+import subprocess
 
 
 class ViewWorker(QtCore.QObject):
@@ -75,6 +78,7 @@ class Worker(QtCore.QObject):
         self.ctrl = ctrl
         self.ctrl["files_scanned"] = 0
         self.ctrl["files_created"] = 0
+        self.create_report_path()
 
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
@@ -133,11 +137,13 @@ class Worker(QtCore.QObject):
             if len(self.files_without_variations) > 0:
                 self.file_copy_pool(self.files_without_variations)
 
-    def create_md_report(self):
-        """Create a reports folder and Initialise the creation of a markdown report"""
+    def create_report_path(self):
         p = Path("reports/")
         p.mkdir(parents=True, exist_ok=True)
+        self.report_path = p.absolute()
 
+    def create_md_report(self):
+        """Create a reports folder and Initialise the creation of a markdown report"""
         self.report = mdutils.MdUtils(
             file_name=f"reports/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}",
             title="Sausage File Converter Report",
@@ -171,6 +177,23 @@ class Worker(QtCore.QObject):
         path_to_str = [str(p) for p in files_without_variations]
 
         self.report.new_list([path_to_str])
+
+    def show_reports_folder(self):
+        """
+        Operating systems need different commands to launch an explorer/finder, find what the platform is and then use the appropriate one.
+        """
+        try:
+            # if MacOS
+            if sys.platform.startswith("darwin"):
+                subprocess.call(("open", self.report_path))
+            # if non-posix, i.e. Windows
+            elif os.name == "nt":
+                os.startfile(self.report_path)
+            # if Linux
+            elif os.name == "posix":
+                subprocess.call(("xdg-open", self.report_path))
+        except Exception as e:
+            print(f"Failed to open folder: {e}")
 
     def remove_too_short_files(self, files_with_variations: list[list[Path]]) -> list:
         """Remove files that are too short from the files_with_variations list of lists"""

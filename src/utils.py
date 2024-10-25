@@ -213,6 +213,15 @@ def clean_output_name(single_variation_list: list[Path]) -> Path:
     first_file_path_stem = file_pairs[0][0].stem
     out_path_stem = ""
 
+    """
+    -go through the tokens, search for them in the original file string
+    -add them to the out path
+    -See if the character afterwards is alphanumeric, these are the chars that would be used to split the file in the original tokenization
+    -if it is, add it to the out path.
+    -there is potential here to lose characters from the output path, if double __ are used for example it will only add the first.
+    -but for most cases this will be work and will save a lot of time.
+    """
+
     for tok in first_token_value_without_difftoken:
         idx = first_file_path_stem.index(tok)
         out_path_stem += tok

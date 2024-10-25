@@ -162,6 +162,7 @@ class MainWidget(QtWidgets.QWidget):
         self.inputfolder_button = QtWidgets.QPushButton("Browse")
         self.outputfolder_button = QtWidgets.QPushButton("Browse")
         self.convert_button = QtWidgets.QPushButton("Sausage!")
+        self.show_reports_button = QtWidgets.QPushButton("Open Report Folder")
 
         self.copyfiles_checkbox = QtWidgets.QCheckBox(
             "Copy unprocessed files to output folder", self
@@ -204,6 +205,7 @@ class MainWidget(QtWidgets.QWidget):
         layout.addLayout(output_directory_layout)
         layout.addWidget(self.convert_button)
         layout.addWidget(self.logger)
+        layout.addWidget(self.show_reports_button)
 
         self.setLayout(layout)
         # Set placeholder text
@@ -256,6 +258,8 @@ class MainWidget(QtWidgets.QWidget):
         self.view_worker.return_list_of_files_for_TreeModel.connect(
             self.receive_files_to_make_TreeModel
         )
+
+        self.show_reports_button.clicked.connect(self.worker.show_reports_folder)
 
         # add Signals to Buttons
         self.inputfolder_button.clicked.connect(self.select_in_folder)
