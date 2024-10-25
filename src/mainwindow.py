@@ -279,6 +279,8 @@ class MainWidget(QtWidgets.QWidget):
 
         if folder:
             self.inputfolder_input.setText(folder)
+            # reset so that if an output folder isn't selected it will create a new default folder.
+            self.outputfolder_input.clear()
 
             # long running task so send to ViewWorker to get files, process them and return as a list.
             self.send_dir_to_process_files.emit(Path(folder))
@@ -336,7 +338,8 @@ class MainWidget(QtWidgets.QWidget):
                 return False
 
             if not self.outputfolder_input.text():
-                self.outputfolder_input = self.inputfolder_input
+                t = self.inputfolder_input.text()
+                self.outputfolder_input.setText(t)
 
             # if there's an input or output path, check they exist. input path is already checked above.  output path is allowed to not exist!
             if (
