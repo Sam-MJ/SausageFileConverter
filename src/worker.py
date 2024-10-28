@@ -154,6 +154,8 @@ class Worker(QtCore.QObject):
         bullet_points = []
         channel_max = max(reportobj.channels_list)
         sample_rate_max = max(reportobj.sample_rates)
+
+        # convert the list of file paths to strings containing the original name, channel count, samplerate and if they have been converted.
         for i in range(len(reportobj.single_variation_list)):
             original_file_name = str(reportobj.single_variation_list[i])
             channel = str(reportobj.channels_list[i])
@@ -169,7 +171,15 @@ class Worker(QtCore.QObject):
                 f"{original_file_name} - Channels: {channel} - Sample Rate: {sample_rate}"
             )
 
-        self.report.new_list([str(reportobj.new_file_name_path), bullet_points])
+        with taglib.File(reportobj.new_file_name_path) as f:
+            new_length = datetime.timedelta(seconds=int(f.length))
+
+        self.report.new_list(
+            [
+                f"{str(reportobj.new_file_name_path)}, Length: {new_length}",
+                bullet_points,
+            ]
+        )
 
     def add_copied_files_to_report(self, files_without_variations):
 
