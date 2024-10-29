@@ -34,7 +34,9 @@ a = Analysis(
     "natsort",
     "soxr",
     "dataclasses",
-    "mdutils"
+    "mdutils",
+    "sys",
+    "subprocess"
 ],
     hookspath=[],
     hooksconfig={},

@@ -31,7 +31,9 @@ hiddenimports += [
     "natsort",
     "soxr",
     "dataclasses",
-    "mdutils"
+    "mdutils",
+    "sys",
+    "subprocess"
 ]
 
 

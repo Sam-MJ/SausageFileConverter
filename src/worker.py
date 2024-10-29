@@ -67,7 +67,7 @@ class ReportObject:
         self.original_file_name: Path = self.single_variation_list[0]
         self.sample_rates: list[int] = []
         self.channels_list: list[int] = []
-        self.error_list: list = []
+        self.error = None
         self.new_file_name_path: Path = None
 
 
@@ -78,7 +78,10 @@ class Worker(QtCore.QObject):
         self.ctrl = ctrl
         self.ctrl["files_scanned"] = 0
         self.ctrl["files_created"] = 0
+
         self.create_report_path()
+        self.report = None
+        self.errored_files: list[ReportObject] = []
 
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
@@ -138,19 +141,22 @@ class Worker(QtCore.QObject):
                 self.file_copy_pool(self.files_without_variations)
 
     def create_report_path(self):
+        """If a reports folder hasn't been created in the root folder, create one"""
         p = Path("reports/")
         p.mkdir(parents=True, exist_ok=True)
         self.report_path = p.absolute()
 
     def create_md_report(self):
-        """Create a reports folder and Initialise the creation of a markdown report"""
+        """Initialise the creation of a markdown report and empty list of files with errors"""
         self.report = mdutils.MdUtils(
-            file_name=f"reports/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}",
+            file_name=f'reports/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
             title="Sausage File Converter Report",
         )
 
-    def add_converted_files_to_report(self, reportobj: ReportObject):
+        self.errored_files: list[ReportObject] = []
 
+    def add_converted_files_to_report(self, reportobj: ReportObject):
+        """Add the name and length of the output file and a list of the files that went into it."""
         bullet_points = []
         channel_max = max(reportobj.channels_list)
         sample_rate_max = max(reportobj.sample_rates)
@@ -187,6 +193,15 @@ class Worker(QtCore.QObject):
         path_to_str = [str(p) for p in files_without_variations]
 
         self.report.new_list([path_to_str])
+
+    def add_errors_to_report(self):
+
+        self.report.new_header(level=1, title="Files that caused Errors")
+
+        obj_to_str = [
+            f"{e.original_file_name}: {str(e.error)}" for e in self.errored_files
+        ]
+        self.report.new_list(obj_to_str)
 
     def show_reports_folder(self):
         """
@@ -289,8 +304,14 @@ class Worker(QtCore.QObject):
             exceptions.ChannelCountError,
             exceptions.BitDepthError,
         ) as e:
+            # terminal out
             print(f"{e}: file: {reportobj.original_file_name}")
+            # GUI out
             self.logger.emit("Write", False, str(reportobj.original_file_name), str(e))
+            # Report out
+            reportobj.error = e
+            self.errored_files.append(reportobj)
+
             if self.copybool:
                 self.files_without_variations.extend(single_variation_list)
 
@@ -304,17 +325,29 @@ class Worker(QtCore.QObject):
             exceptions.FormatChunkError,
             exceptions.SubchunkIDParsingError,
         ) as e:
+            # terminal out
             print(f"{e}: file: {reportobj.original_file_name}")
+            # GUI out
             self.logger.emit("Write", False, str(reportobj.original_file_name), str(e))
+            # Report out
+            reportobj.error = e
+            self.errored_files.append(reportobj)
+
             if self.copybool:
                 self.files_without_variations.extend(single_variation_list)
             # delete file that was created by successful file write
             Path.unlink(reportobj.new_file_name_path)
 
         except Exception as e:
+            # terminal out
             print(f"Unexpected Error: {e}: file {reportobj.original_file_name}")
             print(traceback.print_exc())
+            # GUI out
             self.logger.emit("Write", False, str(reportobj.original_file_name), e)
+            # Report out
+            reportobj.error = e
+            self.errored_files.append(reportobj)
+
             if self.copybool:
                 self.files_without_variations.extend(single_variation_list)
 
@@ -365,6 +398,9 @@ class Worker(QtCore.QObject):
         # if there is no copying stage, all processing is finished and the report can be generated.
         # if not it will finish after copying stage.
         if not self.copybool:
+            if self.errored_files:
+                self.add_errors_to_report()
+
             self.report.create_md_file()
 
     def file_copy_pool(self, files_without_variations):
@@ -385,6 +421,7 @@ class Worker(QtCore.QObject):
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_without_variations))
 
+        self.add_errors_to_report()
         self.add_copied_files_to_report(files_without_variations)
         self.report.create_md_file()
 
