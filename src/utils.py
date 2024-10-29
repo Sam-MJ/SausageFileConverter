@@ -27,13 +27,13 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     types = ".wav"
 
     for file in file_paths:
-        """ COMMENTED OUT BECAUSE IT IS A LOT FASTER,
+        """COMMENTED OUT BECAUSE IT IS A LOT FASTER,
         THIS MAY CAUSE AN ERROR IF SOME MUPPET HAS A DIRECTORY ENDING IN .WAV,
         YES THAT ACTUALLY HAPPENED BUT THEY DESERVE IT.
         THIS IS LEFT HERE IN CASE IT COMES BACK TO BITE ME.
 
         if file.is_dir():
-            continue """
+            continue"""
 
         if file.suffix.lower() == types and file.name[0:2] != "._":
             # On windows, MAC OSX has hidden temp Wav files that start with ._ They don't have any useable content.
@@ -46,22 +46,33 @@ def get_files(in_folder_path: Path) -> tuple[list, list]:
     return (audio_file_names, non_audio_file_names)
 
 
-def split_paths_to_tokens(file_names: list[Path]) -> dict:
+def split_paths_to_tokens(file_names: list[Path]) -> dict[Path:list]:
     """Split file name into individual words and remove digits, punctuation etc"""
     path_and_tokens = {}  # path and tokens value with numbers removed
 
     for file_path in file_names:
 
-        """ COMMENTED OUT BECAUSE IT IS A LOT FASTER,
+        """COMMENTED OUT BECAUSE IT IS A LOT FASTER,
         THE ONLY EDGE CASE WHERE THIS MAY CAUSE ISSUES IS WHEN FOLDERS HAVE THE SAME NAME AS TO BE VARIATIONS OF EACHOTHER
         OR ARE THE SAME NAME AS FILES WITH VARIATIONS WHILE HAVING THE SAME PARENT FOLDER.
 
         if file_path.is_dir():
-            continue """
+            continue"""
 
         name = file_path.stem
 
-        tokens = re.findall(r"[a-zA-Z]+|\d+", name)  # words and digits
+        """This regex will match all digits with a distance after it i.e cm/m/ft.
+        One problem is any names that have a number followed by a word with cm/m/ft will also be caught in it
+        so 12monty will be '12m' 'onty' and 13monty would be '13m' 'onty' and not be counted as variations.
+        This may cause a few errors but is a wider edge case than file names with distances in them.
+        """
+        digit_and_distancechars = r"(?:\d+(?:ft|FT|Ft|m|M|cm|CM|Cm)(?=\b|\s|_|-))"
+        all_chars = r"[a-zA-Z]+"
+        all_digits = r"\d+"
+
+        tokens = re.findall(
+            rf"{digit_and_distancechars}|{all_chars}|{all_digits}", name
+        )
 
         path_and_tokens[file_path] = tokens
 
@@ -71,53 +82,55 @@ def split_paths_to_tokens(file_names: list[Path]) -> dict:
 # files to process
 
 
+def difference_token_index(
+    file_pair1: list[Path, list[str]], file_pair2: list[Path, list[str]]
+) -> int:
+    """File path and tokens pair.  See if word tokens in file 1 match those in file 2
+    return -1 if there isn't a difference index or the words do not match"""
+
+    # if files aren't in the same folder
+    # this stops a bug where you have variations from multiple folder levels being appended together
+    if file_pair1[0].parent != file_pair2[0].parent:
+        return -1
+
+    word1_tokens = file_pair1[1]
+    word2_tokens = file_pair2[1]
+    if len(word1_tokens) != len(word2_tokens):
+        return -1
+
+    """
+    Vertical sliding window
+    word1_token1,[word1_token2], word1_token3
+    word2_token1,[word2_token2], word2_token3
+    are tokens in [] the same?
+    """
+
+    diff_index = -1
+
+    for i in range(len(word1_tokens)):
+        if word1_tokens[i] != word2_tokens[i]:
+            # if they aren't both digits, return False
+            if not (word1_tokens[i].isdigit() and word2_tokens[i].isdigit()):
+                return -1
+
+            # if this is the first difference, set the index where differences are allowed.
+            if diff_index == -1:
+                diff_index = i
+
+            # if the difference is in the allowed index, continue
+            if diff_index == i:
+                continue
+
+            # if it's in a non-valid index, return false
+            return -1
+
+    return diff_index
+
+
 def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
     """Find which files have variations and return the file paths in a list of lists"""
-    # convert dict into K,V list of lists.
+    # convert dict into a list of lists with [[path,tokens]].
     file_pairs = list(path_and_tokens_by_name.items())
-
-    def word_match(file_pair1: list, file_pair2: list):
-        """File path and tokens pair.  See if word tokens in file 1 match those in file 2"""
-
-        # if files aren't in the same folder
-        # this stops a bug where you have variations from multiple folder levels being appended together
-        if file_pair1[0].parent != file_pair2[0].parent:
-            return False
-
-        word1_tokens = file_pair1[1]
-        word2_tokens = file_pair2[1]
-        if len(word1_tokens) != len(word2_tokens):
-            return False
-
-        """
-        Vertical sliding window
-        word1_token1,[word1_token2], word1_token3
-        word2_token1,[word2_token2], word2_token3
-        are tokens in [] the same?
-        """
-        diff_index = 0
-        for i in range(len(word1_tokens)):
-            if word1_tokens[i] != word2_tokens[i]:
-                # if they aren't both digits, return False
-                if not (word1_tokens[i].isdigit() and word2_tokens[i].isdigit()):
-                    return False
-
-                # if both are the same or within 1 of eachother
-                if word1_tokens[i] == word2_tokens[i] or math.isclose(
-                    int(word1_tokens[i]), int(word2_tokens[i]), rel_tol=1
-                ):
-                    # if this is the first difference, set the index where differences are allowed.
-                    if diff_index == 0:
-                        diff_index = i
-
-                    # if the difference is in the allowed index, continue
-                    if diff_index == i:
-                        continue
-
-                    # if it's in a non-valid index, reset and return false
-                    diff_index = 0
-                    return False
-        return True
 
     files_with_variations = []
     matched_files = []
@@ -128,7 +141,8 @@ def find_files_with_variations(path_and_tokens_by_name: dict) -> list[list]:
         current_file_path = current_file[0]
         previous_file_path = previous_file[0]
 
-        if word_match(current_file, previous_file):
+        if difference_token_index(current_file, previous_file) != -1:
+
             if previous_file_path not in matched_files:
                 matched_files.append(previous_file_path)
 
@@ -178,6 +192,53 @@ def create_output_path(
     return file_output
 
 
+def clean_output_name(single_variation_list: list[Path]) -> Path:
+    """
+    split into tokens,
+    find the variation numbers,
+    find the missing chars between the tokens and re-build the file name without the variation numbers.
+    """
+    path_and_tokens_by_name = split_paths_to_tokens(single_variation_list)
+    # convert dict into list of list of [k:path, v:tokens] pairs
+    file_pairs = list(path_and_tokens_by_name.items())
+
+    # find the index in the token list where the variation number is and remove it.
+    i = difference_token_index(file_pairs[0], file_pairs[1])
+    first_file_tokens = file_pairs[0][1]
+    first_token_value_without_difftoken = (
+        first_file_tokens[:i] + first_file_tokens[i + 1 :]
+    )
+
+    # re-build the stem from the new token list
+    first_file_path_stem = file_pairs[0][0].stem
+    out_path_stem = ""
+
+    """
+    -go through the tokens, search for them in the original file string
+    -add them to the out path
+    -See if the character afterwards is alphanumeric, these are the chars that would be used to split the file in the original tokenization
+    -if it is, add it to the out path.
+    -there is potential here to lose characters from the output path, if double __ are used for example it will only add the first.
+    -but for most cases this will be work and will save a lot of time.
+    """
+
+    for tok in first_token_value_without_difftoken:
+        idx = first_file_path_stem.index(tok)
+        out_path_stem += tok
+        if idx + len(tok) < len(first_file_path_stem):
+            after_char = first_file_path_stem[idx + len(tok)]
+            if not after_char.isalnum():
+                out_path_stem += after_char
+
+    # if the file now ends in _ because the variation number was at the end
+    if not out_path_stem[-1].isalnum():
+        out_path_stem = out_path_stem[:-1]
+
+    suffix = file_pairs[0][0].suffix
+    # first path in single variation list is the file that all the metadata will be taken from
+    return single_variation_list[0].parent.joinpath(out_path_stem + suffix)
+
+
 def create_parent_folders(file_path: Path):
     """check if a path needs folders created and if so, create them"""
     parent_folders = file_path.parent
@@ -196,8 +257,6 @@ def add_end_tag_to_filename(name_path: Path, tag: str):
 
 
 def create_default_file_path(input_path: Path):
-    input_path.name
-
     suffix = "_sausage"
     new_name = input_path.name + suffix
 

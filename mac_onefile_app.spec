@@ -33,7 +33,10 @@ a = Analysis(
     "math",
     "natsort",
     "soxr",
-    "dataclasses"
+    "dataclasses",
+    "mdutils",
+    "sys",
+    "subprocess"
 ],
     hookspath=[],
     hooksconfig={},

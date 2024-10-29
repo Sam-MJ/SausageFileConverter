@@ -162,6 +162,7 @@ class MainWidget(QtWidgets.QWidget):
         self.inputfolder_button = QtWidgets.QPushButton("Browse")
         self.outputfolder_button = QtWidgets.QPushButton("Browse")
         self.convert_button = QtWidgets.QPushButton("Sausage!")
+        self.show_reports_button = QtWidgets.QPushButton("Open Report Folder")
 
         self.copyfiles_checkbox = QtWidgets.QCheckBox(
             "Copy unprocessed files to output folder", self
@@ -204,6 +205,7 @@ class MainWidget(QtWidgets.QWidget):
         layout.addLayout(output_directory_layout)
         layout.addWidget(self.convert_button)
         layout.addWidget(self.logger)
+        layout.addWidget(self.show_reports_button)
 
         self.setLayout(layout)
         # Set placeholder text
@@ -248,7 +250,6 @@ class MainWidget(QtWidgets.QWidget):
         self.worker.number_of_files.connect(self.number_of_files)
         self.worker.progress.connect(self.progress_int)
         self.worker.logger.connect(self.update_logger)
-        # self.worker.processed.connect(self.telem.on_process)
         self.worker.progress.connect(self.telem.on_progress)
 
         self.send_dir_to_process_files.connect(
@@ -257,6 +258,8 @@ class MainWidget(QtWidgets.QWidget):
         self.view_worker.return_list_of_files_for_TreeModel.connect(
             self.receive_files_to_make_TreeModel
         )
+
+        self.show_reports_button.clicked.connect(self.worker.show_reports_folder)
 
         # add Signals to Buttons
         self.inputfolder_button.clicked.connect(self.select_in_folder)
@@ -280,13 +283,14 @@ class MainWidget(QtWidgets.QWidget):
 
         if folder:
             self.inputfolder_input.setText(folder)
+            # reset so that if an output folder isn't selected it will create a new default folder.
+            self.outputfolder_input.clear()
 
             # long running task so send to ViewWorker to get files, process them and return as a list.
             self.send_dir_to_process_files.emit(Path(folder))
             # Show Loading MessageBox
             self.loading.show()
-
-        if not self.outputfolder_input.text():
+            # Set default output folder path to the same as the input path
             self.outputfolder_input.setPlaceholderText(
                 self.inputfolder_input.text() + "_sausage"
             )
@@ -338,7 +342,8 @@ class MainWidget(QtWidgets.QWidget):
                 return False
 
             if not self.outputfolder_input.text():
-                self.outputfolder_input = self.inputfolder_input
+                t = self.inputfolder_input.text()
+                self.outputfolder_input.setText(t)
 
             # if there's an input or output path, check they exist. input path is already checked above.  output path is allowed to not exist!
             if (

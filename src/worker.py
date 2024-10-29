@@ -16,6 +16,12 @@ import exceptions
 from metadata_v2 import Metadata_Assembler
 from file_tree import TreeModel
 
+import mdutils
+import datetime
+import sys
+import os
+import subprocess
+
 
 class ViewWorker(QtCore.QObject):
     return_list_of_files_for_TreeModel = QtCore.Signal(
@@ -54,6 +60,17 @@ class ViewWorker(QtCore.QObject):
         self.msg.close()
 
 
+class ReportObject:
+
+    def __init__(self, single_variation_list):
+        self.single_variation_list: list[Path] = single_variation_list
+        self.original_file_name: Path = self.single_variation_list[0]
+        self.sample_rates: list[int] = []
+        self.channels_list: list[int] = []
+        self.error = None
+        self.new_file_name_path: Path = None
+
+
 class Worker(QtCore.QObject):
 
     def __init__(self, ctrl) -> None:
@@ -62,9 +79,12 @@ class Worker(QtCore.QObject):
         self.ctrl["files_scanned"] = 0
         self.ctrl["files_created"] = 0
 
+        self.create_report_path()
+        self.report = None
+        self.errored_files: list[ReportObject] = []
+
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
-    processed = QtCore.Signal(bool)
     logger = QtCore.Signal(str, bool, str, str)
 
     @QtCore.Slot(str)
@@ -94,6 +114,9 @@ class Worker(QtCore.QObject):
         if self.input_folder == self.output_folder:
             self.output_folder = utils.create_default_file_path(self.output_folder)
 
+        # create a new report each time a folder is selected
+        self.create_md_report()
+
         tokenized = utils.split_paths_to_tokens(view_filtered_list)
         files_with_variations = utils.find_files_with_variations(tokenized)
 
@@ -116,6 +139,86 @@ class Worker(QtCore.QObject):
         if copybool is True:
             if len(self.files_without_variations) > 0:
                 self.file_copy_pool(self.files_without_variations)
+
+    def create_report_path(self):
+        """If a reports folder hasn't been created in the root folder, create one"""
+        p = Path("reports/")
+        p.mkdir(parents=True, exist_ok=True)
+        self.report_path = p.absolute()
+
+    def create_md_report(self):
+        """Initialise the creation of a markdown report and empty list of files with errors"""
+        self.report = mdutils.MdUtils(
+            file_name=f'reports/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
+            title="Sausage File Converter Report",
+        )
+
+        self.errored_files: list[ReportObject] = []
+
+    def add_converted_files_to_report(self, reportobj: ReportObject):
+        """Add the name and length of the output file and a list of the files that went into it."""
+        bullet_points = []
+        channel_max = max(reportobj.channels_list)
+        sample_rate_max = max(reportobj.sample_rates)
+
+        # convert the list of file paths to strings containing the original name, channel count, samplerate and if they have been converted.
+        for i in range(len(reportobj.single_variation_list)):
+            original_file_name = str(reportobj.single_variation_list[i])
+            channel = str(reportobj.channels_list[i])
+            sample_rate = str(reportobj.sample_rates[i])
+
+            if int(channel) < channel_max:
+                channel += f" -> Converted to: {channel_max}"
+
+            if int(sample_rate) < sample_rate_max:
+                sample_rate += f" -> Converted to: {sample_rate_max}"
+
+            bullet_points.append(
+                f"{original_file_name} - Channels: {channel} - Sample Rate: {sample_rate}"
+            )
+
+        with taglib.File(reportobj.new_file_name_path) as f:
+            new_length = datetime.timedelta(seconds=int(f.length))
+
+        self.report.new_list(
+            [
+                f"{str(reportobj.new_file_name_path)}, Length: {new_length}",
+                bullet_points,
+            ]
+        )
+
+    def add_copied_files_to_report(self, files_without_variations):
+
+        self.report.new_header(level=1, title="Copied files")
+        path_to_str = [str(p) for p in files_without_variations]
+
+        self.report.new_list([path_to_str])
+
+    def add_errors_to_report(self):
+
+        self.report.new_header(level=1, title="Files that caused Errors")
+
+        obj_to_str = [
+            f"{e.original_file_name}: {str(e.error)}" for e in self.errored_files
+        ]
+        self.report.new_list(obj_to_str)
+
+    def show_reports_folder(self):
+        """
+        Operating systems need different commands to launch an explorer/finder, find what the platform is and then use the appropriate one.
+        """
+        try:
+            # if MacOS
+            if sys.platform.startswith("darwin"):
+                subprocess.call(("open", self.report_path))
+            # if non-posix, i.e. Windows
+            elif os.name == "nt":
+                os.startfile(self.report_path)
+            # if Linux
+            elif os.name == "posix":
+                subprocess.call(("xdg-open", self.report_path))
+        except Exception as e:
+            print(f"Failed to open folder: {e}")
 
     def remove_too_short_files(self, files_with_variations: list[list[Path]]) -> list:
         """Remove files that are too short from the files_with_variations list of lists"""
@@ -178,18 +281,22 @@ class Worker(QtCore.QObject):
     def concatination_handler(self, single_variation_list: list[Path]):
         """Take a list of files to be appended together, create a new file from it.
         Read metadata from the first of the old files and write to the new one."""
+
         # sort variations
-        original_file_name = single_variation_list[0]
+
+        reportobj = ReportObject(single_variation_list)
 
         try:
-            new_filename_path = self.file_append(
-                single_variation_list,
+            reportobj.new_file_name_path = self.file_append(
+                reportobj,
                 self.silence_duration,
                 self.input_folder,
                 self.output_folder,
                 self.append_tag,
             )
-            self.write_metadata(original_file_name, new_filename_path)
+            self.write_metadata(
+                reportobj.original_file_name, reportobj.new_file_name_path
+            )
 
         # if writing file error
         except (
@@ -197,8 +304,14 @@ class Worker(QtCore.QObject):
             exceptions.ChannelCountError,
             exceptions.BitDepthError,
         ) as e:
-            print(f"{e}: file: {original_file_name}")
-            self.logger.emit("Write", False, str(original_file_name), str(e))
+            # terminal out
+            print(f"{e}: file: {reportobj.original_file_name}")
+            # GUI out
+            self.logger.emit("Write", False, str(reportobj.original_file_name), str(e))
+            # Report out
+            reportobj.error = e
+            self.errored_files.append(reportobj)
+
             if self.copybool:
                 self.files_without_variations.extend(single_variation_list)
 
@@ -212,25 +325,42 @@ class Worker(QtCore.QObject):
             exceptions.FormatChunkError,
             exceptions.SubchunkIDParsingError,
         ) as e:
-            print(f"{e}: file: {original_file_name}")
-            self.logger.emit("Write", False, str(original_file_name), str(e))
+            # terminal out
+            print(f"{e}: file: {reportobj.original_file_name}")
+            # GUI out
+            self.logger.emit("Write", False, str(reportobj.original_file_name), str(e))
+            # Report out
+            reportobj.error = e
+            self.errored_files.append(reportobj)
+
             if self.copybool:
                 self.files_without_variations.extend(single_variation_list)
             # delete file that was created by successful file write
-            Path.unlink(new_filename_path)
+            Path.unlink(reportobj.new_file_name_path)
 
         except Exception as e:
-            print(f"Unexpected Error: {e}: file {original_file_name}")
+            # terminal out
+            print(f"Unexpected Error: {e}: file {reportobj.original_file_name}")
             print(traceback.print_exc())
-            self.logger.emit("Write", False, str(original_file_name), e)
+            # GUI out
+            self.logger.emit("Write", False, str(reportobj.original_file_name), e)
+            # Report out
+            reportobj.error = e
+            self.errored_files.append(reportobj)
+
             if self.copybool:
                 self.files_without_variations.extend(single_variation_list)
 
         else:
-            print("Write: ", str(new_filename_path))
+            print("Write: ", str(reportobj.new_file_name_path))
             self.logger.emit(
-                "Write", True, str(original_file_name), str(new_filename_path)
+                "Write",
+                True,
+                str(reportobj.original_file_name),
+                str(reportobj.new_file_name_path),
             )
+
+            self.add_converted_files_to_report(reportobj)
 
     def write_metadata(self, original_file_name: Path, new_file_name: Path) -> None:
         """Write the metadata from the first file in the list (of the un-appended files) to the new sausage file"""
@@ -252,6 +382,7 @@ class Worker(QtCore.QObject):
         self.number_of_files.emit(
             len(files_with_correct_size_variations), "Appending..."
         )
+        self.report.new_header(level=1, title="Converted Files")
 
         with concurrent.futures.ProcessPoolExecutor() as p_executor:  # using a context manager joins, so blocks
             futures = {
@@ -263,6 +394,14 @@ class Worker(QtCore.QObject):
             # When all are done, send the last percent to the update bar
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_with_correct_size_variations))
+
+        # if there is no copying stage, all processing is finished and the report can be generated.
+        # if not it will finish after copying stage.
+        if not self.copybool:
+            if self.errored_files:
+                self.add_errors_to_report()
+
+            self.report.create_md_file()
 
     def file_copy_pool(self, files_without_variations):
         """create multi-thread pool to copy files"""
@@ -282,9 +421,13 @@ class Worker(QtCore.QObject):
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_without_variations))
 
+        self.add_errors_to_report()
+        self.add_copied_files_to_report(files_without_variations)
+        self.report.create_md_file()
+
     def file_append(
         self,
-        single_variation_list: list,
+        reportobj: ReportObject,
         silence_duration: float,
         input_folder: Path,
         output_folder: Path,
@@ -307,7 +450,7 @@ class Worker(QtCore.QObject):
         list_of_sound_objects = []
         dtype = "float64"  # default dtype soundfile uses to read.
 
-        for file in single_variation_list:
+        for file in reportobj.single_variation_list:
             with soundfile.SoundFile(file, "r") as s:
                 data = s.read()
                 list_of_sound_objects.append(
@@ -320,6 +463,13 @@ class Worker(QtCore.QObject):
                     )
                 )
 
+                reportobj.sample_rates.append(s.samplerate)
+                # if there's only one channel it will be an empty array, if it's 2 or more it's (channel_count,)
+                if len(data.shape[1:]) == 0:
+                    reportobj.channels_list.append(1)
+                else:
+                    reportobj.channels_list.append(data.shape[1:][0])
+
         # check if blocks have the same sample rate and channel count, if not take the highest.
         for block in list_of_sound_objects:
             highest_sample_rate = list_of_sound_objects[0].samplerate
@@ -331,7 +481,6 @@ class Worker(QtCore.QObject):
 
             # print(block.channels)
             if block.channels > highest_channel_count:
-                # TODO automatically take highest channel count and convert the rest
                 highest_channel_count = block.channels
 
             if block.subtype != subtype:
@@ -371,9 +520,12 @@ class Worker(QtCore.QObject):
                 raise exceptions.ChannelCountError(
                     "Error: Variations have different channel counts that are not mono or stereo"
                 )
+                # In the future it may be good to support more channel conversions
 
         # create the output path
-        file_name_path = single_variation_list[0]
+
+        file_name_path = utils.clean_output_name(reportobj.single_variation_list)
+
         new_filename_path = utils.create_output_path(
             file_name_path, input_folder, output_folder
         )
