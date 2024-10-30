@@ -3,7 +3,6 @@ from pathlib import Path
 import concurrent.futures
 import shutil
 from pprint import pprint
-import taglib
 import traceback
 
 import numpy
@@ -121,7 +120,9 @@ class Worker(QtCore.QObject):
         files_with_variations = utils.find_files_with_variations(tokenized)
 
         # sort durations
-        correct_duration_list = self.remove_too_short_files(files_with_variations)
+        correct_duration_list = self.remove_too_long_files(
+            files_with_variations, self.max_duration
+        )
 
         # sort files to be copied, this is done before appending so that failed files can be added to it.
         if copybool is True:
@@ -177,8 +178,9 @@ class Worker(QtCore.QObject):
                 f"{original_file_name} - Channels: {channel} - Sample Rate: {sample_rate}"
             )
 
-        with taglib.File(reportobj.new_file_name_path) as f:
-            new_length = datetime.timedelta(seconds=int(f.length))
+        with soundfile.SoundFile(reportobj.new_file_name_path, "r") as s:
+            length = s.frames / s.samplerate
+            new_length = datetime.timedelta(seconds=int(length))
 
         self.report.new_list(
             [
@@ -220,13 +222,15 @@ class Worker(QtCore.QObject):
         except Exception as e:
             print(f"Failed to open folder: {e}")
 
-    def remove_too_short_files(self, files_with_variations: list[list[Path]]) -> list:
-        """Remove files that are too short from the files_with_variations list of lists"""
+    def remove_too_long_files(
+        self, files_with_variations: list[list[Path]], max_duration
+    ) -> list:
+        """Remove files that are too long from the files_with_variations list of lists"""
         correct_duration_list = []
         count = 0
 
         # if the max duration GUI box has been left empty, return the full list.
-        if self.max_duration == 0:
+        if max_duration == 0:
             return files_with_variations
 
         # flatten list to get count to pass to progress bar
@@ -244,9 +248,13 @@ class Worker(QtCore.QObject):
             for file in variations:
                 count += 1
                 # read file length metadata and append to list if it's small enough
-                with taglib.File(file) as f:
-                    if f.length < self.max_duration:
-                        variations_of_correct_size.append(file)
+                try:
+                    with soundfile.SoundFile(file, "r") as s:
+                        length = s.frames / s.samplerate
+                        if length < max_duration:
+                            variations_of_correct_size.append(file)
+                except soundfile.LibsndfileError:
+                    pass
 
                 # update progress bar
                 self.progress.emit(count)

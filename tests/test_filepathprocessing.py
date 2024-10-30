@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from src import utils
+from src import worker
 from pprint import pprint
 
 
@@ -286,6 +287,38 @@ def test_create_default_path():
     assert out == Path(
         r"D:/Documents/Programming_stuff/Python_projects/Sausage file converter/IN_sausage"
     )
+
+
+def test_remove_too_long_files():
+    w = worker.Worker(ctrl={"break": False})
+
+    files_with_variations = [
+        [
+            Path(r"tests\files\diffchannels\channels_test_file_01.wav"),
+            Path(r"tests\files\diffchannels\channels_test_file_02.wav"),
+            Path(r"tests\files\diffchannels\channels_test_file_03.wav"),
+            Path(r"tests\files\diffchannels\channels_test_file_04.wav"),
+            Path(r"tests\files\diffchannels\channels_test_file_05.wav"),
+        ]
+    ]
+
+    # all files are longer than 0.1 seconds
+    max_duration = 0.1
+    out = worker.Worker.remove_too_long_files(w, files_with_variations, max_duration)
+    assert not out
+
+    # but they are shorter than 1 seconds
+    max_duration = 1
+    out = worker.Worker.remove_too_long_files(w, files_with_variations, max_duration)
+    assert out == [
+        [
+            Path("tests/files/diffchannels/channels_test_file_01.wav"),
+            Path("tests/files/diffchannels/channels_test_file_02.wav"),
+            Path("tests/files/diffchannels/channels_test_file_03.wav"),
+            Path("tests/files/diffchannels/channels_test_file_04.wav"),
+            Path("tests/files/diffchannels/channels_test_file_05.wav"),
+        ]
+    ]
 
 
 if __name__ == "__main__":
