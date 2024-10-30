@@ -10,7 +10,6 @@ hiddenimports += [
     "numpy",
     "concurrent",
     "shutil",
-    "trackback",
     "soundfile",
     "re",
     "mainwindow",

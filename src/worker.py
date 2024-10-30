@@ -3,7 +3,6 @@ from pathlib import Path
 import concurrent.futures
 import shutil
 from pprint import pprint
-import traceback
 
 import numpy
 import soxr
@@ -349,7 +348,6 @@ class Worker(QtCore.QObject):
         except Exception as e:
             # terminal out
             print(f"Unexpected Error: {e}: file {reportobj.original_file_name}")
-            print(traceback.print_exc())
             # GUI out
             self.logger.emit("Write", False, str(reportobj.original_file_name), e)
             # Report out

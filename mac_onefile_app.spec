@@ -13,7 +13,6 @@ a = Analysis(
     "numpy",
     "concurrent",
     "shutil",
-    "trackback",
     "soundfile",
     "re",
     "mainwindow",
