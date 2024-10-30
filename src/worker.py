@@ -429,7 +429,8 @@ class Worker(QtCore.QObject):
             concurrent.futures.wait(futures, return_when="ALL_COMPLETED")
             self.progress.emit(len(files_without_variations))
 
-        self.add_errors_to_report()
+        if self.errored_files:
+            self.add_errors_to_report()
         self.add_copied_files_to_report(files_without_variations)
         self.report.create_md_file()
 
