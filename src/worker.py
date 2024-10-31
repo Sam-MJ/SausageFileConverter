@@ -19,6 +19,7 @@ import datetime
 import sys
 import os
 import subprocess
+import platformdirs
 
 
 class ViewWorker(QtCore.QObject):
@@ -141,15 +142,19 @@ class Worker(QtCore.QObject):
                 self.file_copy_pool(self.files_without_variations)
 
     def create_report_path(self):
-        """If a reports folder hasn't been created in the root folder, create one"""
-        p = Path("reports/")
-        p.mkdir(parents=True, exist_ok=True)
-        self.report_path = p.absolute()
+        """If a reports folder hasn't been created in appdata, create one"""
+        appname = "SausageFileConverter"
+        appauthor = "SoundSpruce"
+
+        path = platformdirs.user_data_path(appname, appauthor, ensure_exists=False)
+        Path(path).mkdir(parents=True, exist_ok=True)
+
+        self.report_path = path
 
     def create_md_report(self):
         """Initialise the creation of a markdown report and empty list of files with errors"""
         self.report = mdutils.MdUtils(
-            file_name=f'reports/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
+            file_name=f'{self.report_path}/SausageFileConverterReport_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}',
             title="Sausage File Converter Report",
         )
 

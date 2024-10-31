@@ -27,3 +27,4 @@ soundfile==0.12.1
 soxr==0.4.0
 tomli==2.0.1
 urllib3==2.2.2
+platformdirs==4.3.6

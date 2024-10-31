@@ -31,7 +31,8 @@ hiddenimports += [
     "dataclasses",
     "mdutils",
     "sys",
-    "subprocess"
+    "subprocess",
+    "platformdirs"
 ]
 
 

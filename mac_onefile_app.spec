@@ -34,7 +34,8 @@ a = Analysis(
     "dataclasses",
     "mdutils",
     "sys",
-    "subprocess"
+    "subprocess",
+    "platformdirs"
 ],
     hookspath=[],
     hooksconfig={},
