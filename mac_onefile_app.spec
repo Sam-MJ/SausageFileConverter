@@ -54,7 +54,7 @@ exe = EXE(
     [],
     name='SausageFileConverter',
     appname='SausageFileConverter',
-    appauthor='SoundSpruce'
+    appauthor='SoundSpruce',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
