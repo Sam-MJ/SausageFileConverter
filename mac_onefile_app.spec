@@ -52,7 +52,9 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='app',
+    name='SausageFileConverter',
+    appname='SausageFileConverter',
+    appauthor='SoundSpruce'
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -69,6 +71,8 @@ exe = EXE(
 
 app = BUNDLE(exe,
     name='SausageFileConverter.app',
+    appname='SausageFileConverter',
+    appauthor='SoundSpruce',
     icon=None,
     bundle_identifier=None,
     version='0.0.1',
