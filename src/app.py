@@ -13,5 +13,4 @@ if __name__ == "__main__":
     w.show()
     w.raise_()
 
-    app.exec()
-    print("Closing...")
+    sys.exit(app.exec())

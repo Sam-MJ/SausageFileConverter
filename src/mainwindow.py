@@ -48,6 +48,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         openUrl(self)
 
+    def closeEvent(self, event):
+        """Close threads and wait until processes have finished.
+        In order to press quit you have to cancel whatever task is in progress.
+        """
+        self.mainWidget.worker_thread.exit()
+        self.mainWidget.telem_thread.exit()
+        self.mainWidget.view_thread.exit()
+
+        self.mainWidget.view_thread.wait()
+        self.mainWidget.worker_thread.wait()
+        self.mainWidget.telem_thread.wait()
+        event.accept()
+
 
 class MainWidget(QtWidgets.QWidget):
 
@@ -66,6 +79,9 @@ class MainWidget(QtWidgets.QWidget):
         self.progress.setLabelText(progress_text)
         self.progress.setWindowTitle("Processing...")
         self.progress.setWindowModality(QtCore.Qt.WindowModal)
+        self.progress.setWindowFlags(
+            QtCore.Qt.Window | QtCore.Qt.WindowTitleHint | QtCore.Qt.CustomizeWindowHint
+        )
         self.progress.setMinimumDuration(0)
         self.progress.show()
         self.progress.canceled.connect(self.cancel)
@@ -271,6 +287,9 @@ class MainWidget(QtWidgets.QWidget):
 
     def cancel(self):
         self.ctrl["break"] = True
+        self.progress.setLabelText("Finishing Final Process")
+        self.progress.setWindowTitle("Closing")
+        self.progress.show()
 
     def select_in_folder(self):
         """Input Folder selection browser"""

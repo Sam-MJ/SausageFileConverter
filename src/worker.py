@@ -244,12 +244,14 @@ class Worker(QtCore.QObject):
         self.number_of_files.emit(len(files_with_vars), "Analysing...")
 
         for variations in files_with_variations:
-            # if cancel button pressed
-            if self.ctrl["break"] is True:
-                return files_with_variations
             variations_of_correct_size = []
-
             for file in variations:
+
+                # if cancel button pressed
+                if self.ctrl["break"] is True:
+                    self.progress.emit(len(files_with_vars))
+                    return files_with_variations
+
                 count += 1
                 # read file length metadata and append to list if it's small enough
                 try:
@@ -386,9 +388,9 @@ class Worker(QtCore.QObject):
         self.count += 1
         self.ctrl["files_created"] += 1
 
-    def file_append_pool(self, files_with_correct_size_variations):
+    def file_append_pool(self, files_with_correct_size_variations: list[list[Path]]):
         """create multi-process pool to append files"""
-        # Progress bar setup
+        # Progress bar setup, min = count = 0, max = number of files
         self.count = 0
         self.number_of_files.emit(
             len(files_with_correct_size_variations), "Appending..."
