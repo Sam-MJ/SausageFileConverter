@@ -287,8 +287,13 @@ class MainWidget(QtWidgets.QWidget):
 
     def cancel(self):
         self.ctrl["break"] = True
-        self.progress.setLabelText("Finishing Final Process")
+        self.progress.setLabelText("Finishing current file process")
         self.progress.setWindowTitle("Closing")
+
+        # Find the progress bar and hide it
+        progress_bar = self.progress.findChild(QtWidgets.QProgressBar)
+        progress_bar.setVisible(False)
+
         self.progress.show()
 
     def select_in_folder(self):
