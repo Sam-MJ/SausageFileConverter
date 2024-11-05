@@ -85,6 +85,7 @@ class Worker(QtCore.QObject):
     number_of_files = QtCore.Signal(int, str)
     progress = QtCore.Signal(int)
     logger = QtCore.Signal(str, bool, str, str)
+    finished_processing = QtCore.Signal(bool)
 
     @QtCore.Slot(str)
     def all_inputs(
@@ -415,6 +416,7 @@ class Worker(QtCore.QObject):
                 self.add_errors_to_report()
 
             self.report.create_md_file()
+            self.finished_processing.emit(True)
 
     def file_copy_pool(self, files_without_variations):
         """create multi-thread pool to copy files"""
@@ -438,6 +440,7 @@ class Worker(QtCore.QObject):
             self.add_errors_to_report()
         self.add_copied_files_to_report(files_without_variations)
         self.report.create_md_file()
+        self.finished_processing.emit(True)
 
     def file_append(
         self,

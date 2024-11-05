@@ -52,6 +52,10 @@ class MainWindow(QtWidgets.QMainWindow):
         """Close threads and wait until processes have finished.
         In order to press quit you have to cancel whatever task is in progress.
         """
+        if self.mainWidget._is_processing:
+            event.ignore()
+            return
+
         self.mainWidget.worker_thread.exit()
         self.mainWidget.telem_thread.exit()
         self.mainWidget.view_thread.exit()
@@ -78,7 +82,7 @@ class MainWidget(QtWidgets.QWidget):
         )
         self.progress.setLabelText(progress_text)
         self.progress.setWindowTitle("Processing...")
-        self.progress.setWindowModality(QtCore.Qt.WindowModal)
+        self.progress.setWindowModality(QtCore.Qt.NonModal)
         self.progress.setWindowFlags(
             QtCore.Qt.Window | QtCore.Qt.WindowTitleHint | QtCore.Qt.CustomizeWindowHint
         )
@@ -89,6 +93,10 @@ class MainWidget(QtWidgets.QWidget):
     @QtCore.Slot(int)
     def progress_int(self, prog_int):
         self.progress.setValue(prog_int)
+
+    @QtCore.Slot(bool)
+    def finished_processing(self):
+        self._is_processing = False
 
     @QtCore.Slot(str, bool, str, str)
     def update_logger(self, function, success, in_path, out_path):
@@ -124,6 +132,7 @@ class MainWidget(QtWidgets.QWidget):
         self.audio_files = None
         self.non_audio_files = None
         self.ctrl = {"break": False, "files_created": 0}
+        self._is_processing = False
         self.model = TreeModel([], None)
         self.proxy_model = FilterProxyModel()
 
@@ -267,6 +276,7 @@ class MainWidget(QtWidgets.QWidget):
         self.worker.progress.connect(self.progress_int)
         self.worker.logger.connect(self.update_logger)
         self.worker.progress.connect(self.telem.on_progress)
+        self.worker.finished_processing.connect(self.finished_processing)
 
         self.send_dir_to_process_files.connect(
             self.view_worker.get_files_and_find_variations
@@ -286,6 +296,7 @@ class MainWidget(QtWidgets.QWidget):
         self.convert_button.clicked.connect(self.process)
 
     def cancel(self):
+        """Send break command and set GUI to show that it is finishing the last process."""
         self.ctrl["break"] = True
         self.progress.setLabelText("Finishing current file process")
         self.progress.setWindowTitle("Closing")
@@ -403,6 +414,11 @@ class MainWidget(QtWidgets.QWidget):
                 md = 0
 
             copybool = self.copyfiles_checkbox.isChecked()
+
+            if self._is_processing:
+                return
+
+            self._is_processing = True
             # send to Worker object
             self.submit_signal.emit(
                 i,
