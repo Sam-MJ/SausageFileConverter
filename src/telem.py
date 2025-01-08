@@ -20,9 +20,12 @@ class SendThread(QtCore.QThread):
         # self.payload = payload
 
         self.database_url = os.getenv("DATABASE_URL")
+        headers = {"Host": "soundspruce.com"}
 
         try:
-            requests.post(self.database_url, json=self.payload, timeout=15)
+            requests.post(
+                self.database_url, json=self.payload, timeout=30, headers=headers
+            )
         except Exception as e:
             self.has_internet.emit(False)
         # print(f"send first payload {self.payload}")
@@ -88,8 +91,8 @@ class Telem(QtCore.QObject):
 
         pl = self._get_json_payload()
         database_url = os.getenv("DATABASE_URL")
-        r = requests.post(database_url, json=pl, timeout=15)
-        # print(r)
+        headers = {"Host": "soundspruce.com"}
+        r = requests.post(database_url, json=pl, timeout=15, headers=headers)
 
     @QtCore.Slot(int)
     def on_progress(self):
