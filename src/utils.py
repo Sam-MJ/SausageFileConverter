@@ -1,11 +1,6 @@
 from pathlib import Path
 import re
-import math
 import natsort
-
-# from src import exceptions
-
-from pprint import pprint
 
 
 def get_files(in_folder_path: Path) -> tuple[list, list]:

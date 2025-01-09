@@ -1,11 +1,10 @@
 import requests
 import uuid
 from PySide6 import QtCore
-from dotenv import load_dotenv
-import os
 import datetime
 import json
-import time
+
+DATABASE_URL = "https://www.soundspruce.com/sausage-file-converter-transactions"
 
 
 class SendThread(QtCore.QThread):
@@ -18,14 +17,10 @@ class SendThread(QtCore.QThread):
 
     def run(self):
         # self.payload = payload
-
-        self.database_url = os.getenv("DATABASE_URL")
         headers = {"Host": "soundspruce.com"}
 
         try:
-            requests.post(
-                self.database_url, json=self.payload, timeout=30, headers=headers
-            )
+            requests.post(DATABASE_URL, json=self.payload, timeout=30, headers=headers)
         except Exception as e:
             self.has_internet.emit(False)
         # print(f"send first payload {self.payload}")
@@ -47,7 +42,6 @@ class Telem(QtCore.QObject):
 
         self.internet_status = True
         # method calls
-        load_dotenv(override=True)
         self._send_first_request()
 
     def _send_first_request(self):
@@ -90,9 +84,8 @@ class Telem(QtCore.QObject):
             # this also returns None if the server isn't running.
 
         pl = self._get_json_payload()
-        database_url = os.getenv("DATABASE_URL")
         headers = {"Host": "soundspruce.com"}
-        r = requests.post(database_url, json=pl, timeout=15, headers=headers)
+        r = requests.post(DATABASE_URL, json=pl, timeout=15, headers=headers)
 
     @QtCore.Slot(int)
     def on_progress(self):

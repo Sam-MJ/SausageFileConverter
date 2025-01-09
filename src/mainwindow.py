@@ -6,7 +6,9 @@ from telem import Telem
 from file_tree import TreeModel, FilterProxyModel
 
 import sys
-import os
+
+# This should be a .env but it isn't easy to setup with pyinstaller.
+DOCS_URL = "https://drive.google.com/drive/folders/1xd2OL913scQhadmyo6mU79cbZ2ikDN5x?usp=sharing"
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,10 +41,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_about(self):
         """Link to docs hosted on google drive"""
-        docs_url = os.getenv("DOCS_URL")
 
         def openUrl(self):
-            url = QtCore.QUrl(docs_url)
+            url = QtCore.QUrl(DOCS_URL)
             if not QtGui.QDesktopServices.openUrl(url):
                 QtWidgets.QMessageBox.warning(self, "Open Url", "Could not open url")
 

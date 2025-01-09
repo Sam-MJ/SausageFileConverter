@@ -2,8 +2,6 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from pathlib import Path
 import concurrent.futures
 import shutil
-from pprint import pprint
-
 import numpy
 import soxr
 import soundfile
@@ -12,7 +10,6 @@ from dataclasses import dataclass
 import utils
 import exceptions
 from metadata_v2 import Metadata_Assembler
-from file_tree import TreeModel
 
 import mdutils
 import datetime
